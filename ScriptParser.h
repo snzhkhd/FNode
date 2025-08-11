@@ -42,6 +42,7 @@ private:
 
     // Данные парсера
     std::vector<FunctionInfo> functions;
+
     std::unordered_set<std::string> knownFunctionNames;
     std::unordered_map<std::string, EVarType> typeMap;
     int nextNodeId = 1;

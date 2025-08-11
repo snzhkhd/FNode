@@ -17,6 +17,42 @@ bool FOnlineScriptParser::ParseScript(const std::string& scriptContent, ScriptFi
     // Шаг 3: Создаем узлы
     CreateNodes(scriptFile);
 
+    for (auto f : functions)
+    {
+        if (f.isImported)
+        {
+            Imports imp;
+            imp.ID = nextNodeId++;           // выделяем уникальный ID
+            imp.name = f.name;               // имя функции
+            imp.sourceFile = f.sourceFile;   // откуда импорт
+            int portId = 0;
+            for (auto& param : f.parameters) {
+                SPort p;
+                p.name = param.first;
+                p.ID = portId++;
+                p.type = param.second;
+                p.isArray = false;
+                p.isInput = true;
+                p.isHovered = false;
+                imp.ports.push_back(p);
+            }
+
+            // Выходной порт (Result) — если возврат не void
+            if (f.returnType != "void" && !f.returnType.empty()) {
+                SPort out;
+                out.name = "Result";
+                out.ID = portId++;
+                out.type = ParseVarType(f.returnType);
+                out.isArray = false;
+                out.isInput = false;
+                out.isHovered = false;
+                imp.ports.push_back(out);
+            }
+            scriptFile.Import.push_back(imp);
+        }
+    }
+
+
     // Шаг 4: Создаем соединения
     CreateConnections(scriptFile);
 
@@ -124,6 +160,8 @@ void FOnlineScriptParser::CreateNodes(ScriptFile& scriptFile)
         auto node = std::make_shared<NodeBase>();
         node->ID = nextNodeId++;
         node->name = functions[i].name;
+        if (!functions[i].sourceFile.empty())
+            node->name += " ( from \"" + functions[i].sourceFile + "\" )";
 
         node->position = {
             startX + (i % 4) * xSpacing,
@@ -169,7 +207,7 @@ void FOnlineScriptParser::CreateNodes(ScriptFile& scriptFile)
         // Добавляем выходной порт для возвращаемого значения (если не void)
         if (functions[i].returnType != "void") {
             SPort port;
-            port.name = "Result";
+            port.name = "Result ( " + functions[i].returnType + " )";
             port.ID = portId++;
             port.type = ParseVarType(functions[i].returnType);
             port.isArray = false;
@@ -235,10 +273,12 @@ void FOnlineScriptParser::ParseFunctionParameters(const std::string& paramsStr, 
     if (paramsStr.empty()) return;
 
     std::string s = paramsStr;
-    // Trim
+    // Trim helper
     auto trim = [](std::string& t) {
-        t.erase(0, t.find_first_not_of(" \t\r\n"));
-        t.erase(t.find_last_not_of(" \t\r\n") + 1);
+        size_t a = t.find_first_not_of(" \t\r\n");
+        if (a == std::string::npos) { t.clear(); return; }
+        size_t b = t.find_last_not_of(" \t\r\n");
+        t = t.substr(a, b - a + 1);
     };
 
     // Если единственный параметр - void
@@ -246,7 +286,7 @@ void FOnlineScriptParser::ParseFunctionParameters(const std::string& paramsStr, 
     trim(tmp);
     if (tmp == "void") return;
 
-    // Разбиваем по запятой, игнорируя запятые внутри <> (шаблонов) и скобок
+    // Разбиваем по запятым, игнорируя запятые внутри <> и ()
     std::vector<std::string> parts;
     int angleDepth = 0;
     int parenDepth = 0;
@@ -270,56 +310,85 @@ void FOnlineScriptParser::ParseFunctionParameters(const std::string& paramsStr, 
     for (auto& p : parts) {
         std::string param = p;
         trim(param);
+        if (param.empty()) continue;
 
-        // Удаляем значение по умолчанию (всё после '=')
-        size_t eq = std::string::npos;
+        // Удаляем значение по умолчанию (всё после '=' на верхнем уровне)
+        size_t eqPos = std::string::npos;
         int depth = 0;
         for (size_t i = 0; i < param.size(); ++i) {
             char c = param[i];
             if (c == '<') depth++;
             else if (c == '>') if (depth > 0) depth--;
-            else if (c == '=' && depth == 0) { eq = i; break; }
+            else if (c == '(') depth++;
+            else if (c == ')') if (depth > 0) depth--;
+            else if (c == '=' && depth == 0) { eqPos = i; break; }
         }
-        if (eq != std::string::npos) param = param.substr(0, eq);
+        if (eqPos != std::string::npos) param = param.substr(0, eqPos);
         trim(param);
         if (param.empty()) continue;
 
-        // Нужно разделить тип и имя: ищем последний пробел вне <> и ()
-        size_t splitPos = std::string::npos;
-        angleDepth = 0; parenDepth = 0;
-        for (int i = (int)param.size() - 1; i >= 0; --i) {
-            char c = param[i];
-            if (c == '>') angleDepth++;
-            else if (c == '<') if (angleDepth > 0) angleDepth--;
-            else if (c == ')') parenDepth++;
-            else if (c == '(') if (parenDepth > 0) parenDepth--;
-            else if ((c == ' ' || c == '\t') && angleDepth == 0 && parenDepth == 0) {
-                splitPos = i;
-                break;
+        // --- Находим имя параметра как последний идентификатор в строке ---
+        // (идентификатор: [A-Za-z_][A-Za-z0-9_]*)
+        int i = (int)param.size() - 1;
+
+        // сначала пропустим возможные символы, не входящие в идентификатор (например ; , ] и т.п.)
+        while (i >= 0 && !((param[i] == '_') || isalnum((unsigned char)param[i]))) i--;
+
+        // теперь конец идентификатора
+        int endId = i;
+        // идём назад пока буквы/цифры/_
+        while (i >= 0 && (param[i] == '_' || isalnum((unsigned char)param[i]))) i--;
+        int startId = i + 1;
+
+        std::string name;
+        std::string typeStr;
+        if (endId >= startId) {
+            name = param.substr(startId, endId - startId + 1);
+            // тип — всё, что слева от имени
+            if (startId > 0) typeStr = param.substr(0, startId);
+            else typeStr.clear();
+        }
+        else {
+            // fallback — попробуем найти последний пробел (как раньше)
+            size_t splitPos = std::string::npos;
+            int angleDepth2 = 0, parenDepth2 = 0;
+            for (int k = (int)param.size() - 1; k >= 0; --k) {
+                char c = param[k];
+                if (c == '>') angleDepth2++;
+                else if (c == '<') if (angleDepth2 > 0) angleDepth2--;
+                else if (c == ')') parenDepth2++;
+                else if (c == '(') if (parenDepth2 > 0) parenDepth2--;
+                else if ((c == ' ' || c == '\t') && angleDepth2 == 0 && parenDepth2 == 0) {
+                    splitPos = (size_t)k;
+                    break;
+                }
+            }
+            if (splitPos != std::string::npos) {
+                typeStr = param.substr(0, splitPos);
+                name = param.substr(splitPos + 1);
+            }
+            else {
+                // совсем нет — считаем весь параметр типом, генерируем имя
+                typeStr = param;
+                name = "arg";
             }
         }
 
-        std::string typeStr, name;
-        if (splitPos != std::string::npos) {
-            typeStr = param.substr(0, splitPos);
-            name = param.substr(splitPos + 1);
-        }
-        else {
-            // Параметр без имени? (редко) — считаем всё типом, генерим имя
-            typeStr = param;
-            name = "arg";
-        }
-
-        // Удаляем & в имени, указатели/ссылки, если случайно оказались
-        // Иногда имя может идти как '&name' или '*ptr'
-        while (!name.empty() && (name.front() == '&' || name.front() == '*')) name.erase(name.begin());
-        while (!name.empty() && (name.back() == '&' || name.back() == '*')) name.pop_back();
+        // Очищаем имя от ведущих/концевых &/* (вроде "&player" или "*ptr")
+        while (!name.empty() && (name.front() == '&' || name.front() == '*' || isspace((unsigned char)name.front()))) name.erase(name.begin());
+        while (!name.empty() && (name.back() == '&' || name.back() == '*' || isspace((unsigned char)name.back()))) name.pop_back();
 
         trim(typeStr);
         trim(name);
 
+        // Если имя всё ещё пустое — fallback
+        if (name.empty()) name = "arg";
+
         EVarType type = ParseVarType(typeStr);
         params.push_back({ name, type });
+
+        // debug: можно раскомментировать для логов конкретной строки
+        // printf("Param parsed: raw='%s' type='%s' name='%s' -> enum=%d\n", p.c_str(), typeStr.c_str(), name.c_str(), (int)type);
     }
 }
 

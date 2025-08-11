@@ -1,0 +1,1593 @@
+{
+  "connections": [
+    {
+      "inNode": 29,
+      "inPort": 0,
+      "outNode": 7,
+      "outPort": 1
+    },
+    {
+      "inNode": 21,
+      "inPort": 0,
+      "outNode": 11,
+      "outPort": 1
+    },
+    {
+      "inNode": 22,
+      "inPort": 0,
+      "outNode": 11,
+      "outPort": 1
+    },
+    {
+      "inNode": 21,
+      "inPort": 0,
+      "outNode": 12,
+      "outPort": 1
+    },
+    {
+      "inNode": 22,
+      "inPort": 0,
+      "outNode": 12,
+      "outPort": 1
+    },
+    {
+      "inNode": 17,
+      "inPort": 0,
+      "outNode": 16,
+      "outPort": 1
+    },
+    {
+      "inNode": 32,
+      "inPort": 0,
+      "outNode": 19,
+      "outPort": 1
+    },
+    {
+      "inNode": 21,
+      "inPort": 0,
+      "outNode": 20,
+      "outPort": 1
+    },
+    {
+      "inNode": 17,
+      "inPort": 0,
+      "outNode": 25,
+      "outPort": 1
+    },
+    {
+      "inNode": 21,
+      "inPort": 0,
+      "outNode": 25,
+      "outPort": 1
+    },
+    {
+      "inNode": 22,
+      "inPort": 0,
+      "outNode": 25,
+      "outPort": 1
+    },
+    {
+      "inNode": 29,
+      "inPort": 0,
+      "outNode": 26,
+      "outPort": 1
+    },
+    {
+      "inNode": 24,
+      "inPort": 0,
+      "outNode": 29,
+      "outPort": 1
+    },
+    {
+      "inNode": 24,
+      "inPort": 0,
+      "outNode": 29,
+      "outPort": 1
+    },
+    {
+      "inNode": 30,
+      "inPort": 0,
+      "outNode": 29,
+      "outPort": 1
+    },
+    {
+      "inNode": 21,
+      "inPort": 0,
+      "outNode": 33,
+      "outPort": 1
+    },
+    {
+      "inNode": 22,
+      "inPort": 0,
+      "outNode": 33,
+      "outPort": 1
+    },
+    {
+      "inNode": 14,
+      "inPort": 0,
+      "outNode": 13,
+      "outPort": 1
+    },
+    {
+      "inNode": 18,
+      "inPort": 0,
+      "outNode": 14,
+      "outPort": 1
+    },
+    {
+      "inNode": 9,
+      "inPort": 0,
+      "outNode": 15,
+      "outPort": 1
+    },
+    {
+      "inNode": 8,
+      "inPort": 0,
+      "outNode": 6,
+      "outPort": 1
+    },
+    {
+      "inNode": 21,
+      "inPort": 3,
+      "outNode": 11,
+      "outPort": 3
+    },
+    {
+      "inNode": 22,
+      "inPort": 3,
+      "outNode": 12,
+      "outPort": 3
+    },
+    {
+      "inNode": 15,
+      "inPort": 4,
+      "outNode": 14,
+      "outPort": 3
+    },
+    {
+      "inNode": 6,
+      "inPort": 3,
+      "outNode": 1,
+      "outPort": 3
+    },
+    {
+      "inNode": 34,
+      "inPort": 3,
+      "outNode": 30,
+      "outPort": 4
+    },
+    {
+      "inNode": 27,
+      "inPort": 0,
+      "outNode": 17,
+      "outPort": 1
+    },
+    {
+      "inNode": 24,
+      "inPort": 0,
+      "outNode": 27,
+      "outPort": 1
+    }
+  ],
+  "id": 0,
+  "name": "animation",
+  "nodes": [
+    {
+      "id": 1,
+      "isPure": false,
+      "name": "HasIllegalItems ( from \"security\" )",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "cr",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( bool )",
+          "type": "bool"
+        }
+      ],
+      "pos": [
+        -79.0,
+        409.0
+      ],
+      "variables": []
+    },
+    {
+      "id": 2,
+      "isPure": false,
+      "name": "DropDrugEffects ( from \"drugs\" )",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "cr",
+          "type": "Critter"
+        }
+      ],
+      "pos": [
+        196.3648681640625,
+        -31.687255859375
+      ],
+      "variables": []
+    },
+    {
+      "id": 3,
+      "isPure": false,
+      "name": "DropPoison ( from \"poison\" )",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "cr",
+          "type": "Critter"
+        }
+      ],
+      "pos": [
+        601.3717041015625,
+        -72.83952331542969
+      ],
+      "variables": []
+    },
+    {
+      "id": 4,
+      "isPure": false,
+      "name": "DropRadiation ( from \"radiation\" )",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "cr",
+          "type": "Critter"
+        }
+      ],
+      "pos": [
+        987.1742553710938,
+        24.554176330566406
+      ],
+      "variables": []
+    },
+    {
+      "id": 5,
+      "isPure": false,
+      "name": "CreateHotel",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "param1",
+          "type": "int"
+        },
+        {
+          "id": 4,
+          "isArray": false,
+          "isInput": true,
+          "name": "param2",
+          "type": "int"
+        },
+        {
+          "id": 5,
+          "isArray": false,
+          "isInput": true,
+          "name": "param3",
+          "type": "int"
+        }
+      ],
+      "pos": [
+        -44.0,
+        228.0
+      ],
+      "variables": []
+    },
+    {
+      "id": 6,
+      "isPure": false,
+      "name": "HotelInit",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "firstTime",
+          "type": "bool"
+        }
+      ],
+      "pos": [
+        350.0,
+        250.0
+      ],
+      "variables": []
+    },
+    {
+      "id": 7,
+      "isPure": false,
+      "name": "HotelIn",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        }
+      ],
+      "pos": [
+        -1033.645263671875,
+        1613.4658203125
+      ],
+      "variables": []
+    },
+    {
+      "id": 8,
+      "isPure": false,
+      "name": "HotelRoomInit",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "firstTime",
+          "type": "bool"
+        }
+      ],
+      "pos": [
+        850.0,
+        250.0
+      ],
+      "variables": []
+    },
+    {
+      "id": 9,
+      "isPure": false,
+      "name": "HotelRoomIn",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        }
+      ],
+      "pos": [
+        604.4444580078125,
+        746.6666259765625
+      ],
+      "variables": []
+    },
+    {
+      "id": 10,
+      "isPure": false,
+      "name": "HotelRoomOut",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        }
+      ],
+      "pos": [
+        350.0,
+        400.0
+      ],
+      "variables": []
+    },
+    {
+      "id": 11,
+      "isPure": false,
+      "name": "e_CloseLocs",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "val",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( uint )",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        -1149.49072265625,
+        343.8368225097656
+      ],
+      "variables": []
+    },
+    {
+      "id": 12,
+      "isPure": false,
+      "name": "e_CloseLoc",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "val",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( uint )",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        -1082.209716796875,
+        630.2340087890625
+      ],
+      "variables": []
+    },
+    {
+      "id": 13,
+      "isPure": false,
+      "name": "e_DestroyLocs",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "val",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( uint )",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        -317.0,
+        836.7777709960938
+      ],
+      "variables": []
+    },
+    {
+      "id": 14,
+      "isPure": false,
+      "name": "e_DestroyLoc",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "val",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( uint )",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        -198.888916015625,
+        624.4443969726563
+      ],
+      "variables": []
+    },
+    {
+      "id": 15,
+      "isPure": false,
+      "name": "entrance_Hotel",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "loc",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "critters",
+          "type": "string"
+        },
+        {
+          "id": 4,
+          "isArray": false,
+          "isInput": true,
+          "name": "entrance",
+          "type": "uint8"
+        },
+        {
+          "id": 5,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( bool )",
+          "type": "bool"
+        }
+      ],
+      "pos": [
+        600.0,
+        550.0
+      ],
+      "variables": []
+    },
+    {
+      "id": 16,
+      "isPure": false,
+      "name": "r_HotelClean",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "critter",
+          "type": "string"
+        }
+      ],
+      "pos": [
+        -1049.11279296875,
+        1313.4150390625
+      ],
+      "variables": []
+    },
+    {
+      "id": 17,
+      "isPure": false,
+      "name": "HotelClean",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        }
+      ],
+      "pos": [
+        -600.58251953125,
+        989.860107421875
+      ],
+      "variables": []
+    },
+    {
+      "id": 18,
+      "isPure": false,
+      "name": "r_HotelGet",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "critter",
+          "type": "string"
+        }
+      ],
+      "pos": [
+        126.66667175292969,
+        752.2222290039063
+      ],
+      "variables": []
+    },
+    {
+      "id": 19,
+      "isPure": false,
+      "name": "HotelGet",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "userid",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        -1184.5078125,
+        1758.1256103515625
+      ],
+      "variables": []
+    },
+    {
+      "id": 20,
+      "isPure": false,
+      "name": "r_HotelPut",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "critter",
+          "type": "string"
+        }
+      ],
+      "pos": [
+        -1060.1083984375,
+        775.3990478515625
+      ],
+      "variables": []
+    },
+    {
+      "id": 21,
+      "isPure": false,
+      "name": "HotelPut",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "userid",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        -472.0115966796875,
+        333.5638122558594
+      ],
+      "variables": []
+    },
+    {
+      "id": 22,
+      "isPure": false,
+      "name": "ToBank",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "userid",
+          "type": "uint"
+        },
+        {
+          "id": 4,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( uint )",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        -444.9749755859375,
+        505.4033203125
+      ],
+      "variables": []
+    },
+    {
+      "id": 23,
+      "isPure": false,
+      "name": "ToRoom",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "bankmap",
+          "type": "string"
+        },
+        {
+          "id": 4,
+          "isArray": false,
+          "isInput": true,
+          "name": "userid",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        643.9827880859375,
+        1558.4366455078125
+      ],
+      "variables": []
+    },
+    {
+      "id": 24,
+      "isPure": false,
+      "name": "ToRoom",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "containerid",
+          "type": "string"
+        },
+        {
+          "id": 4,
+          "isArray": false,
+          "isInput": true,
+          "name": "userid",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        -300.9859924316406,
+        1296.7001953125
+      ],
+      "variables": []
+    },
+    {
+      "id": 25,
+      "isPure": false,
+      "name": "r_HoteltoGlobal",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "critter",
+          "type": "string"
+        }
+      ],
+      "pos": [
+        -1059.2598876953125,
+        1152.3687744140625
+      ],
+      "variables": []
+    },
+    {
+      "id": 26,
+      "isPure": false,
+      "name": "r_HoteltoRoom",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "critter",
+          "type": "string"
+        }
+      ],
+      "pos": [
+        -1062.1607666015625,
+        1464.9605712890625
+      ],
+      "variables": []
+    },
+    {
+      "id": 27,
+      "isPure": false,
+      "name": "r_HotelInfo",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "critter",
+          "type": "string"
+        }
+      ],
+      "pos": [
+        -244.80010986328125,
+        1027.3536376953125
+      ],
+      "variables": []
+    },
+    {
+      "id": 28,
+      "isPure": false,
+      "name": "ChMoneyGet",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( bool )",
+          "type": "bool"
+        }
+      ],
+      "pos": [
+        850.0,
+        1000.0
+      ],
+      "variables": []
+    },
+    {
+      "id": 29,
+      "isPure": false,
+      "name": "HoteltoRoom",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "map",
+          "type": "string"
+        }
+      ],
+      "pos": [
+        -664.9859008789063,
+        1461.0208740234375
+      ],
+      "variables": []
+    },
+    {
+      "id": 30,
+      "isPure": false,
+      "name": "HaveRoom",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "player",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "hotel",
+          "type": "string"
+        },
+        {
+          "id": 4,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( uint )",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        -265.2679138183594,
+        1575.8345947265625
+      ],
+      "variables": []
+    },
+    {
+      "id": 31,
+      "isPure": false,
+      "name": "e_Teleport",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "val",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( uint )",
+          "type": "uint"
+        }
+      ],
+      "pos": [
+        600.0,
+        1150.0
+      ],
+      "variables": []
+    },
+    {
+      "id": 32,
+      "isPure": false,
+      "name": "CheckItemIsBook",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "item",
+          "type": "string"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": false,
+          "name": "Result ( bool )",
+          "type": "bool"
+        }
+      ],
+      "pos": [
+        -662.69287109375,
+        1748.4798583984375
+      ],
+      "variables": []
+    },
+    {
+      "id": 33,
+      "isPure": false,
+      "name": "delMan",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "cr",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "p0",
+          "type": "int"
+        },
+        {
+          "id": 4,
+          "isArray": false,
+          "isInput": true,
+          "name": "p1",
+          "type": "int"
+        },
+        {
+          "id": 5,
+          "isArray": false,
+          "isInput": true,
+          "name": "p2",
+          "type": "int"
+        }
+      ],
+      "pos": [
+        -1067.909912109375,
+        936.2127685546875
+      ],
+      "variables": []
+    },
+    {
+      "id": 34,
+      "isPure": false,
+      "name": "StartManT",
+      "ports": [
+        {
+          "id": 0,
+          "isArray": false,
+          "isInput": true,
+          "name": "ExecIn",
+          "type": "bool"
+        },
+        {
+          "id": 1,
+          "isArray": false,
+          "isInput": false,
+          "name": "ExecOut",
+          "type": "bool"
+        },
+        {
+          "id": 2,
+          "isArray": false,
+          "isInput": true,
+          "name": "cr",
+          "type": "Critter"
+        },
+        {
+          "id": 3,
+          "isArray": false,
+          "isInput": true,
+          "name": "p0",
+          "type": "int"
+        },
+        {
+          "id": 4,
+          "isArray": false,
+          "isInput": true,
+          "name": "p1",
+          "type": "int"
+        },
+        {
+          "id": 5,
+          "isArray": false,
+          "isInput": true,
+          "name": "p2",
+          "type": "int"
+        }
+      ],
+      "pos": [
+        229.83087158203125,
+        1550.5413818359375
+      ],
+      "variables": []
+    }
+  ],
+  "variables": []
+}

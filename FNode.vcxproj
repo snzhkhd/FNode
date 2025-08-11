@@ -147,6 +147,7 @@
     <ClCompile Include="ScriptParser.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="FileManager.h" />
     <ClInclude Include="main.h" />
     <ClInclude Include="PluginLoader.h" />
     <ClInclude Include="ResourceManager.h" />

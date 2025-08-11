@@ -1,0 +1,763 @@
+// Author: Incedium
+// Hotel scripts
+#include "_macros.fos"
+#include "utils_for_array.fos"
+import bool HasIllegalItems(Critter & cr) from "security";
+import void DropDrugEffects( Critter& cr ) from "drugs";
+import void DropPoison( Critter& cr ) from "poison";
+import void DropRadiation( Critter& cr ) from "radiation";
+
+#define STR_HOTEL_ONLY_ONE (5750) //В свою комнату Вас пустят только одного, распустите группу.
+#define STR_HOTEL_NO_CAR (5751) //К сожалению, в настоящий момент Отель не имеет специализированной стоянки, пожалуйста, найдите для парковки другое место.
+#define STR_HOTEL_NO_BOMB (5752) //Пронос активированной взрывчатки в Отель запрещён.
+#define HOLO_HOTEL_INFO                      (44) //номер голодиска с информацией об Отеле.
+#define STR_NOTIFY_HOLODISK     (6000) // В вашем Пипбое записана важная информация.
+#define ENTRANCE_ROOM                      (1) //Вход в комнату.
+#define ENTRANCE_HOTEL                     (2) //Парадный вход.
+#define ENT_HIDE_CONT                 (100) // Гекс со скрытым контейнером. 
+#define HIDE_CONTAINER_PID            (PID_FOOTLOCKER_CLEAN_LEFT)
+#define ROOMS #(locId)                      ("Hotel_"+locId +"_rooms") //активные комнаты
+#define TELEPORT_TIME                     (1) //Время до автоматической телепортации в Комнату.
+#define ROOM_LIFE_TIME                     (REAL_MINUTE(45)) //Время жизни комнаты, если в течении этого времени никто не заходил, запускается событие удаления
+#define DESTROY_TIME                     (REAL_MINUTE(30)) //Время уничтожения энки
+#define HOLO_HOTEL_INFO                      (44) //номер голодиска с информацией об Отеле.
+#define MAP_STORAGE     (237) //ид карты банковского хранилища
+
+
+const uint16[] Pids_Books = {PID_HOLODISK, PID_BIG_BOOK_OF_SCIENCE, PID_DEANS_ELECTRONICS, PID_FIRST_AID_BOOK, PID_SCOUT_HANDBOOK, PID_GUNS_AND_BULLETS, PID_TECHNICAL_MANUAL, PID_CATS_PAW, PID_CATS_PAW_ISSUE_5};//книги
+
+void CreateHotel(Critter& player, int param1, int param2, int param3)//создание Отеля админской командой. можно понатыкать бесконечное число Отелей, в каждом своё хранилище. Формат ~run hotel CreateHotel type x y
+{
+  uint16 type=LOCATION_Hotel3;
+  uint16 WorldX=uint16(param2);
+  uint16 WorldY=uint16(param3);
+  switch(param1)
+    {
+     case 0: //железобетон
+      type=LOCATION_Hotel;
+      break;
+     case 1: //собор
+      type=LOCATION_Hotel2;
+      break;
+     default: //кирпич
+      type=LOCATION_Hotel3;
+      break;
+     }
+  CreateLocation(type, WorldX, WorldY, null);
+}
+
+void HotelInit(Map& map, bool firstTime) //инициализация карты отеля, игрока должно автоматом перекидывать в личную комнату. Если этого вдруг не случилось - с карты должно быть возможно выйти или войти в "комнату" самостоятельно.
+{
+ map.SetEvent(MAP_EVENT_IN_CRITTER,"HotelIn");
+  if (firstTime)//если в первый раз - нужно запустить глобальное событие "уборки" локаций
+   {
+    GameVar@ delevent = GetGlobalVar(GVAR_hotel_delete_room_event);
+    if (delevent.GetValue()<=0)
+      delevent=CreateTimeEvent(__FullSecond+ROOM_LIFE_TIME, "e_CloseLocs", true);
+    GameVar@ destroyevent = GetGlobalVar(GVAR_hotel_destroy_room_event);
+    if (destroyevent.GetValue()<=0)
+      destroyevent=CreateTimeEvent(__FullSecond+DESTROY_TIME, "e_DestroyLocs", true);
+   }
+}
+
+void HotelIn(Map& map, Critter& player) //вход на карту.
+{
+  HoteltoRoom(player, map);
+}
+
+void HotelRoomInit(Map& map, bool firstTime) //инициализация карты комнаты, если игрок уходит, нужно прибрать вещи, сохранить их, и удалить карту
+{
+  map.SetEvent(MAP_EVENT_IN_CRITTER,"HotelRoomIn");
+  map.SetEvent(MAP_EVENT_OUT_CRITTER,"HotelRoomOut");
+}
+
+void HotelRoomIn(Map& map, Critter& player) //вход на карту - если было запущено событие удаления, удалить его
+ {
+   Location@ loc = map.GetLocation();
+   GameVar @ lasttime = GetLocalVar(LLVAR_hotel_last_time, loc.Id);
+   lasttime=__FullSecond;
+ }
+
+void HotelRoomOut(Map& map, Critter& player) //выход с карты
+ {
+   Location@ loc = map.GetLocation();
+   GameVar @ lasttime = GetLocalVar(LLVAR_hotel_last_time, loc.Id);
+   lasttime=__FullSecond;
+ }
+
+uint e_CloseLocs(uint[]@ val)//закрытие комнат
+{
+//  int tic0=GetTicks();
+  uint16 hx=0;
+  uint16 hy=0;
+  Location@ [] locs;
+  GetAllLocations(LOCATION_Hotel_Room, locs);
+  GetAllLocations(LOCATION_Hotel_Room2, locs);
+  GetAllLocations(LOCATION_Hotel_Room3, locs);
+  for(uint i=0,l=locs.length();i<l;i++)
+   {
+     if (!locs[i].AutoGarbage)//jобрабатываем только ещё не помеченые на удаление
+      {
+       Map @ map = locs[i].GetMapByIndex(0);
+       GameVar @ lasttime = GetLocalVar(LLVAR_hotel_last_time, locs[i].Id);
+       uint time=__FullSecond+ROOM_LIFE_TIME;
+       if ((lasttime<__FullSecond+ROOM_LIFE_TIME) and (map.GetCritters(0, FIND_ALL|FIND_ONLY_PLAYERS, null)==0))//комната стоит слишком долго и постояльца там нет, удалить
+        {
+          GameVar @ master = GetLocalVar(LLVAR_hotel_room_master, locs[i].Id);
+          uint playerid=uint(master.GetValue());
+          if (playerid>0)//актуальная версия комнаты, старые пусть закрываются по старой схеме
+           {
+             HotelPut(map, playerid);			
+             uint hotel=ToBank(map, playerid);//по идее не возвращает ничего внятного, потому что ид отеля возвращается только в исключительных случаях
+		         string key=ROOMS(hotel);
+             uint[] allrooms;
+             if(GetAnyData(key, allrooms))
+              {
+                for(uint j=0,ll=allrooms.length();j<ll;j++)//помечаем на удаление
+				        {
+				         Log ("allrooms[j] "  + allrooms[j]);
+                 if (allrooms[j]==locs[i].Id) allrooms.removeAt(j);
+                }
+				        EraseAnyData(key);
+                SetAnyData(key, allrooms);
+               }
+           }
+        }
+      }
+   }
+//   int tic1=GetTicks(); Log ("e_CloseLocs " +(tic1-tic0)+" "+locs.length());
+   return ROOM_LIFE_TIME;
+}
+
+uint e_CloseLoc(uint[]@ val)//закрытие локи
+{
+   uint playerid=val[0];
+   uint mapid=val[1];
+   Map@ map=GetMap(mapid);
+   if(!valid(map)) return 0;
+   HotelPut(map, playerid);
+   uint hotel=ToBank(map, playerid);
+   Location@ loc = map.GetLocation();
+   CreateTimeEvent(__FullSecond+DESTROY_TIME, "hotel@e_DestroyLoc", loc.Id, true);
+   string key=ROOMS(hotel);
+   uint[] allrooms;
+   if(!GetAnyData(key, allrooms)) return 0;
+   for(uint i=0,l=allrooms.length();i<l;i++)//помечаем на удаление
+    if (allrooms[i]==loc.Id) allrooms.removeAt(i);
+   EraseAnyData(key);
+   SetAnyData(key, allrooms);
+   return 0;
+}
+
+uint e_DestroyLocs(uint[]@ val)//если на локациях не осталось вещей, помечаем на удаление
+{
+  Location@ [] locs;
+  GetAllLocations(LOCATION_Hotel_Room, locs);
+  GetAllLocations(LOCATION_Hotel_Room2, locs);
+  GetAllLocations(LOCATION_Hotel_Room3, locs);
+  for(uint i=0,l=locs.length();i<l;i++)
+   {
+     if (!locs[i].AutoGarbage)//jобрабатываем только ещё не помеченые на удаление
+      {
+       Map @ map = locs[i].GetMapByIndex(0);
+       GameVar @ lasttime = GetLocalVar(LLVAR_hotel_last_time, locs[i].Id);
+       uint time=__FullSecond+ROOM_LIFE_TIME;
+       if ((lasttime<__FullSecond+ROOM_LIFE_TIME) and (map.GetCritters(0, FIND_ALL|FIND_ONLY_PLAYERS, null)==0))//комната стоит слишком долго и постояльца там нет, удалить
+        {
+          Map @ map = locs[i].GetMapByIndex(0);
+          Item@[] items;
+          Item@[] containers;
+          map.GetItemsByType(ITEM_TYPE_CONTAINER, containers);
+          map.GetItemsByType(ITEM_TYPE_MISC, items);
+          map.GetItemsByType(ITEM_TYPE_ARMOR, items);
+          map.GetItemsByType(ITEM_TYPE_DRUG, items);
+          map.GetItemsByType(ITEM_TYPE_WEAPON, items);
+          map.GetItemsByType(ITEM_TYPE_AMMO, items);
+          map.GetItemsByType(ITEM_TYPE_KEY, items);
+          for(uint j=0;j<containers.length();j++) //перекидываем предметы из шкафчиков
+           {
+             containers[j].GetItems(0, items);
+           }
+          if (items.length()==0) locs[i].AutoGarbage=true;//всё нормально, вещи все перекинулись.
+         }
+      }
+   }
+ return DESTROY_TIME;
+}
+
+uint e_DestroyLoc(uint[]@ val)//если на локации не осталось вещей, помечаем на удаление
+{
+ uint locid=val[0];
+ Location@ loc = GetLocation(locid);
+ if(!valid(loc)) return 0;
+ Item@[] items;
+ Item@[] containers;
+ Map @ map = loc.GetMapByIndex(0);
+ map.GetItemsByType(ITEM_TYPE_CONTAINER, containers);
+ map.GetItemsByType(ITEM_TYPE_MISC, items);
+ map.GetItemsByType(ITEM_TYPE_ARMOR, items);
+ map.GetItemsByType(ITEM_TYPE_DRUG, items);
+ map.GetItemsByType(ITEM_TYPE_WEAPON, items);
+ map.GetItemsByType(ITEM_TYPE_AMMO, items);
+ map.GetItemsByType(ITEM_TYPE_KEY, items);
+ for(uint i=0;i<containers.length();i++) //перекидываем предметы из шкафчиков
+  {
+   containers[i].GetItems(0, items);
+  }
+ if (items.length()>0) return DESTROY_TIME;//что-то не сработало, вещи на карте остались. Ждём.
+ loc.AutoGarbage=true;
+ return 0;
+}
+
+bool entrance_Hotel(Location& loc, Critter@[]& critters, uint8 entrance)  //входы. проверка на доступ. Если игрок на машине, не один, или не заплатил, вход в комнату будет недоступен
+{
+  uint count=0;
+  Item@[] items;
+  if (entrance==ENTRANCE_ROOM) //игрок хочет зайти в комнату
+   {
+     if (critters.length()>1) //несколько человек
+      {
+       critters[0].SayMsg(SAY_NETMSG,TEXTMSG_TEXT, STR_HOTEL_ONLY_ONE);
+       return false;
+      }
+     if (critters[0].GetItemsByType(ITEM_TYPE_CAR, items)>0)//есть ли тачка
+      {
+        critters[0].SayMsg(SAY_NETMSG,TEXTMSG_TEXT, STR_HOTEL_NO_CAR);
+        return false;
+      }
+     if (HasIllegalItems(critters[0]))
+      {
+        critters[0].SayMsg(SAY_NETMSG,TEXTMSG_TEXT, STR_HOTEL_NO_BOMB);
+        return false;
+      }
+   }
+  return true;
+}
+
+void r_HotelClean(Critter& player, Critter@ critter)//уборка, вещи в комнате сортируются по шкафчикам
+{
+  Map @ map = player.GetMap();
+  HotelClean(map);
+}
+
+void HotelClean(Map& map) //уборка, вещи в комнате сортируются по шкафчикам
+{
+ Item@[] items; Item@[] containers; Item@[] ammo; Item@[] armor; Item@[] drug; Item@[] other; Item@[] weapon;
+ map.GetItemsByType(ITEM_TYPE_CONTAINER, containers);
+ map.GetItemsByType(ITEM_TYPE_MISC, other);
+ map.GetItemsByType(ITEM_TYPE_ARMOR, armor);
+ map.GetItemsByType(ITEM_TYPE_DRUG, drug);
+ map.GetItemsByType(ITEM_TYPE_WEAPON, weapon);
+ map.GetItemsByType(ITEM_TYPE_AMMO, ammo);
+ map.GetItemsByType(ITEM_TYPE_KEY, other);
+ for(uint i=0;i<containers.length();i++) //перекидываем предметы из шкафчиков
+  {
+   switch(containers[i].Val0)
+    {
+     case 2: //броня
+      containers[i].GetItems(0, armor);
+      break;
+     case 3: //оружие
+      containers[i].GetItems(0, weapon);
+      break;
+     case 4: //патроны
+      containers[i].GetItems(0, ammo);
+      break;
+     case 5: //наркота
+      containers[i].GetItems(0, drug);
+      break;
+     case 6: //остальное
+      containers[i].GetItems(0, other);
+      break;
+     }
+  }
+  for(uint i=0;i<other.length();i++) //проверяем предметы
+  {
+   uint16 pid=other[i].GetProtoId();
+   if ((pid>7910 && pid<7916) || (pid>579 && pid<585))
+    {
+      other.removeAt(i);
+      i--;
+    }
+  }
+ for(uint j=0;j<containers.length();j++)//сортировка по контейнерам
+  {
+   switch(containers[j].Val0)
+    {
+     case 2: //броня
+      MoveItems(armor, containers[j], 0);
+      break;
+     case 3: //оружие
+      MoveItems(weapon, containers[j], 0);
+      break;
+     case 4: //патроны
+      MoveItems(ammo, containers[j], 0);
+      break;
+     case 5: //наркота
+      MoveItems(drug, containers[j], 0);
+      break;
+     case 6: //остальное
+      MoveItems(other, containers[j], 0);
+      break;
+    }
+  }
+}
+
+void r_HotelGet(Critter& player, Critter@ critter)//получить вещи - вещи вытаскиваются из сейфа и раскладываются по шкафчикам
+{
+  Map @ map = player.GetMap();
+//  HotelGet(map, player.Id);
+}
+
+void HotelGet(Map& map, uint userid)//получить вещи - вещи вытаскиваются из сейфа и раскладываются по шкафчикам
+{
+ uint16 hx=0;
+ uint16 hy=0;
+ uint8 itemtype=0;
+ Item@[] items;
+ Item@[] ammo;
+ Item@[] armor;
+ Item@[] books;
+ Item@[] drug;
+ Item@[] other;
+ Item@[] weapon;
+ Item@[] containers;
+ map.GetEntireCoords(ENT_HIDE_CONT, 0, hx, hy);
+ Item@ contHide=map.GetItem(hx, hy, HIDE_CONTAINER_PID);//находим скрытый контейнер
+ if (contHide.GetItems(userid, items)>0)
+  {
+    for(uint i=0;i<items.length();i++)//сортировка предметов
+     {
+       itemtype=items[i].GetType();
+       switch(itemtype)
+         {
+           case ITEM_TYPE_AMMO: //патроны
+            ammo.insertLast(@items[i]);
+            break;
+           case ITEM_TYPE_ARMOR: //броня
+            armor.insertLast(@items[i]);
+            break;
+           case ITEM_TYPE_DRUG: //наркота
+            drug.insertLast(@items[i]);
+            break;
+           case ITEM_TYPE_WEAPON: //оружие
+            weapon.insertLast(@items[i]);
+            break;
+           default: //остальное
+            if (CheckItemIsBook(items[i])) books.insertLast(@items[i]);
+              else other.insertLast(@items[i]);
+            break;
+         }
+     }
+    map.GetItemsByType(ITEM_TYPE_CONTAINER, containers);//теперь рассовываем по контейнерам
+    for(uint j=0;j<containers.length();j++)//сортировка по контейнерам
+     {
+       switch(containers[j].Val0)
+         {
+           case 1: //книги
+            MoveItems(books, containers[j], 0);
+            break;
+           case 2: //броня
+            MoveItems(armor, containers[j], 0);
+            break;
+           case 3: //оружие
+            MoveItems(weapon, containers[j], 0);
+            break;
+           case 4: //патроны
+            MoveItems(ammo, containers[j], 0);
+            break;
+           case 5: //наркота
+            MoveItems(drug, containers[j], 0);
+            break;
+           case 6: //остальное
+            MoveItems(other, containers[j], 0);
+            break;
+         }
+     }
+  }
+}
+
+void r_HotelPut(Critter& player, Critter@ critter)//положить вещи из шкафчиков в сейф
+{
+  Map @ map = player.GetMap();
+  HotelPut(map, player.Id);
+}
+
+void HotelPut(Map& map, uint userid) //положить вещи из шкафчиков в сейф
+{
+ uint16 hx=0;
+ uint16 hy=0;
+ Item@[] items;
+ Item@[] containers;
+ map.GetItemsByType(ITEM_TYPE_CONTAINER, containers);
+ map.GetItemsByType(ITEM_TYPE_MISC, items);
+ map.GetItemsByType(ITEM_TYPE_ARMOR, items);
+ map.GetItemsByType(ITEM_TYPE_DRUG, items);
+ map.GetItemsByType(ITEM_TYPE_WEAPON, items);
+ map.GetItemsByType(ITEM_TYPE_AMMO, items);
+ map.GetItemsByType(ITEM_TYPE_KEY, items);
+ //Log(" put  " + containers.length());
+ for(uint i=0;i<containers.length();i++) //перекидываем предметы из шкафчиков
+  {
+ // Log(" put c " + i);
+   containers[i].GetItems(0, items);
+  }
+ //Log(" put c h " + items.length());
+ map.GetEntireCoords(ENT_HIDE_CONT, 0, hx, hy);
+ Item@ contHide=map.GetItem(hx, hy, HIDE_CONTAINER_PID);//находим скрытый контейнер
+ // Log(" put c h3");
+ if (items.length()>0 && valid(contHide) && valid(items)){
+	for(uint i=0;i<items.length();i++){
+    if (valid(items[i])) MoveItem(items[i],items[i].GetCount(), contHide, userid);
+	}
+	}
+}
+
+/*uint ToBank_(Map@map, uint userid)//перекидываем из отеля в банк
+{
+ uint blocid=0;
+ uint16 hx=0;
+ uint16 hy=0;
+ uint bankpid=MAP_repl_bank;
+ Item@[] items;
+ map.GetEntireCoords(ENT_HIDE_CONT, 0, hx, hy);
+ Item@ contHide1=map.GetItem(hx, hy, HIDE_CONTAINER_PID);//находим скрытый контейнер
+ Location@ loc = map.GetLocation();
+ GameVar @ bank = GetLocalVar(LLVAR_hotel_room_bank, loc.Id);
+ Item@ contHide=GetItem(bank.GetValue());
+ if (@contHide==null)//если в переменной ничего не проставлено, запускаем процедуру поиска банка
+  {
+    Location@ bankloc = GetLocationByPid(LOCATION_Replication1, 0);
+    Map@ bankmap=bankloc.GetMap(bankpid); //подгружаем карту банка
+    blocid=bankloc.Id;
+    bankmap.GetEntireCoords(ENT_HIDE_CONT, 0, hx, hy);
+    Item@ contHide=bankmap.GetItem(hx, hy, HIDE_CONTAINER_PID);//находим скрытый контейнер
+  }
+  else
+   {
+    Map@ bankmap=GetMap(contHide.MapId);
+    Location@ bankloc=bankmap.GetLocation();
+    blocid=bankloc.Id;
+   }
+ if (contHide1.GetItems(userid, items)>0)
+  {
+    if (valid(items) && valid (contHide))  MoveItems(items, contHide, userid);
+  }
+ return blocid;
+}*/
+
+uint ToBank(Map@map, uint userid)//перекидываем из отеля в банк
+{
+ uint blocid=0;
+ uint16 hx=0;
+ uint16 hy=0;
+ Item@[] items;
+ map.GetEntireCoords(ENT_HIDE_CONT, 0, hx, hy);
+ Item@ contHide1=map.GetItem(hx, hy, HIDE_CONTAINER_PID);//находим скрытый контейнер
+ Location@ loc = map.GetLocation();
+ GameVar @ bank = GetLocalVar(LLVAR_hotel_room_bank, loc.Id);
+ Item@ contHide=GetItem(bank.GetValue());
+ if (@contHide==null)//если в переменной ничего не проставлено, запускаем процедуру поиска банка
+  {
+   Map@ bankmap=GetMapByPid( MAP_STORAGE, 0);
+   if (!valid(bankmap))//не найдена карта банка
+    {
+     Log("Не удаётся найти банк!");
+    return 0;
+    }
+    bankmap.GetEntireCoords(LOCATION_SanFrancisco, 0, hx, hy);
+    Item@ contHide=bankmap.GetItem(hx, hy, HIDE_CONTAINER_PID);//находим скрытый контейнер
+  }
+ if (contHide1.GetItems(userid, items)>0)
+  {
+    if (valid(items) && valid (contHide))  MoveItems(items, contHide, userid);
+  }
+ return 0;
+}
+
+void ToRoom(Map@map, Map@ bankmap, uint userid)//перекидываем из банка в отель
+{
+ uint16 hx=0;
+ uint16 hy=0;
+ Item@[] items;
+ bankmap.GetEntireCoords(ENT_HIDE_CONT, 0, hx, hy);
+ Item@ contHide=bankmap.GetItem(hx, hy, HIDE_CONTAINER_PID);//находим скрытый контейнер
+ map.GetEntireCoords(ENT_HIDE_CONT, 0, hx, hy);
+ Item@ contHide1=map.GetItem(hx, hy, HIDE_CONTAINER_PID);//находим скрытый контейнер
+ Location@ loc = map.GetLocation();
+ GameVar @ bank = GetLocalVar(LLVAR_hotel_room_bank, loc.Id);
+ bank=contHide.Id;
+ if (contHide.GetItems(userid, items)>0) MoveItems(items, contHide1, userid);
+}
+
+void ToRoom(Map@map, uint16 containerid, uint userid)//перекидываем из банка в отель
+{
+  Map@ bankmap=GetMapByPid( MAP_STORAGE, 0);
+  if (!valid(bankmap))//не найдена карта банка
+   {
+    Log("Не удаётся найти банк!");
+    return;
+   }
+ uint16 hx=0;
+ uint16 hy=0;
+ Item@[] items;
+ bankmap.GetEntireCoords(containerid, 0, hx, hy);
+ Item@ contHide=bankmap.GetItem(hx, hy, HIDE_CONTAINER_PID);//находим скрытый контейнер
+ map.GetEntireCoords(ENT_HIDE_CONT, 0, hx, hy);
+ Item@ contHide1=map.GetItem(hx, hy, HIDE_CONTAINER_PID);//находим скрытый контейнер
+ Location@ loc = map.GetLocation();
+ GameVar @ bank = GetLocalVar(LLVAR_hotel_room_bank, loc.Id);
+ bank=contHide.Id;
+ if (contHide.GetItems(userid, items)>0) MoveItems(items, contHide1, userid);
+}
+
+void r_HoteltoGlobal(Critter& player, Critter@ critter)//на глобал, в этот момент должны сохраниться вещи, а энка - самоуничтожиться
+{
+  Map @ map = player.GetMap();
+  HotelClean(map);
+  HotelPut(map, player.Id);
+  ToBank(map, player.Id);
+  player.TransitToGlobal(false);
+}
+
+void r_HoteltoRoom(Critter& player, Critter@ critter)//в комнату, в шкафчиках должны появиться вещи из банка
+{
+  Map @ map = player.GetMap();
+  HoteltoRoom(player, map);
+}
+
+void r_HotelInfo(Critter& player, Critter@ critter)//записывает инфу об Отеле
+{
+  //if (player.IsHolodiskInfo(HOLO_HOTEL_INFO))
+  player.AddHolodiskInfo(HOLO_HOTEL_INFO);//если не читал диcк Отеля, пусть прочитает
+  player.SayMsg(SAY_NETMSG,TEXTMSG_TEXT,STR_NOTIFY_HOLODISK);
+}
+bool ChMoneyGet (Critter& player)
+{
+ if (player.Stat[ ST_REPLICATION_MONEY ] > 249)
+ {
+    player.StatBase[ ST_REPLICATION_MONEY ] -=250;
+	  return true;
+ }
+
+ int havemoney = player.CountItem( PID_BOTTLE_CAPS );
+ if (havemoney > 249)
+ {
+  player.DeleteItem( PID_BOTTLE_CAPS, 250 );
+  return true;
+ }
+
+return false;
+}
+
+void HoteltoRoom(Critter& player, Map& map)//в комнату, в шкафчиках должны появиться вещи из банка
+{
+  uint16 hx=0; uint16 hy=0;
+  uint16 bankpid=MAP_repl_bank;
+  uint16 type=LOCATION_Hotel_Room3;
+  Location@ loc = map.GetLocation();
+  uint locId=HaveRoom(player, loc);
+  switch(loc.GetProtoId())
+   {
+    case LOCATION_Hotel: //железобетон
+     type=LOCATION_Hotel_Room;
+     bankpid=LOCATION_SanFrancisco;
+     break;
+    case LOCATION_Hotel2: //собор
+     type=LOCATION_Hotel_Room2;
+     bankpid=LOCATION_SanFrancisco;
+     break;
+    case LOCATION_Hotel3: //кирпич
+     type=LOCATION_Hotel_Room3;
+     bankpid=LOCATION_SanFrancisco;
+     break;
+    case LOCATION_Den: //Яма
+     type=LOCATION_Hotel_Room3;
+     bankpid=LOCATION_Den;
+     break;
+    case LOCATION_Klamath: //Кламат
+     type=LOCATION_Hotel_Room3;
+     bankpid=LOCATION_Klamath;
+     break;
+    case LOCATION_Modoc: //Модок
+     type=LOCATION_Hotel_Room2;
+     bankpid=LOCATION_Modoc;
+     break;
+    case LOCATION_VaultCity: //Город Убежище
+     type=LOCATION_Hotel_Room;
+     bankpid=LOCATION_VaultCity;
+     break;
+    case LOCATION_Gecko: //Гекко
+     type=LOCATION_Hotel_Room;
+     bankpid=LOCATION_Gecko;
+     break;
+    case LOCATION_BrokenHills: //Брокен Хиллз
+     type=LOCATION_Hotel_Room3;
+     bankpid=LOCATION_BrokenHills;
+     break;
+    case LOCATION_NewReno: //Нью Рено
+     type=LOCATION_Hotel_Room2;
+     bankpid=LOCATION_NewReno;
+     break;
+    case LOCATION_NCR: //НКР
+     type=LOCATION_Hotel_Room2;
+     bankpid=LOCATION_NCR;
+     break;
+    case LOCATION_Redding: //Реддинг
+     type=LOCATION_Hotel_Room2;
+     bankpid=LOCATION_Redding;
+     break;
+    case LOCATION_SanFrancisco: //Сан Франциско
+     type=LOCATION_Hotel_Room3;
+     bankpid=LOCATION_SanFrancisco;
+     break;
+    case LOCATION_Arroyo: //Арройо
+     type=LOCATION_Hotel_Room3;
+     bankpid=LOCATION_Arroyo;
+     break;
+    case LOCATION_Arena: //Арена
+     type=LOCATION_Hotel_Room3;
+     bankpid=LOCATION_Arroyo;
+     break;
+    default: //репликации
+     type=LOCATION_Hotel_Room3;
+     bankpid=LOCATION_Arroyo;
+     break;
+   }
+  if(locId==0)//нет активных комнат
+   {
+    Critter@[] grp;
+    grp.insertLast(@player);
+    locId = CreateLocation(type, loc.WorldX, loc.WorldY, grp);
+   }
+  if(locId==0) return;
+  Location@ loc2 = GetLocation(locId);
+  if(!valid(loc2)) return;
+  string key=ROOMS(loc.Id);
+  uint[] allrooms;
+  GetAnyData(key,allrooms);
+  allrooms.insertLast(locId);//добавим локу в список, потом будет проще удалять
+  SetAnyData(key, allrooms);
+  Map @ map2 = loc2.GetMapByIndex(0);
+  GameVar @ master = GetLocalVar(LLVAR_hotel_room_master, loc2.Id);
+  master=player.Id;
+  uint[] ev={player.Id, map2.Id};
+  CreateTimeEvent(__FullSecond+TELEPORT_TIME, "hotel@e_Teleport", ev, true);
+  ToRoom(map2, bankpid, player.Id);
+//  HotelGet(map2, player.Id);
+}
+
+uint HaveRoom(Critter& player, Location@ hotel) //есть ли у игрока активированная комната в указанном отеле, возвращает ид карты с комнатой
+{
+  uint16 type=LOCATION_Hotel_Room3;
+  switch(hotel.GetProtoId())
+   {
+     case LOCATION_Hotel: //железобетон
+      type=LOCATION_Hotel_Room;
+      break;
+     case LOCATION_Hotel2: //собор
+      break;
+    case LOCATION_Modoc: //Модок
+     type=LOCATION_Hotel_Room2;
+     break;
+    case LOCATION_VaultCity: //Город Убежище
+     type=LOCATION_Hotel_Room;
+     break;
+    case LOCATION_Gecko: //Гекко
+     type=LOCATION_Hotel_Room;
+     break;
+    case LOCATION_NewReno: //Нью Рено
+     type=LOCATION_Hotel_Room2;
+     break;
+    case LOCATION_NCR: //НКР
+     type=LOCATION_Hotel_Room2;
+     break;
+    case LOCATION_Redding: //Реддинг
+     type=LOCATION_Hotel_Room2;
+     break;
+    default: //кирпич
+      type=LOCATION_Hotel_Room3;
+      break;
+    }
+  if (player.IsKnownLoc(false, type))//у игрока есть какая-то активная комната, если координаты совпадают с координатами отеля, значит он уже имеет комнату в этом отеле
+   {
+    string key=ROOMS(hotel.Id);
+    uint[] allrooms;
+    if(!GetAnyData(key, allrooms)) return 0;
+    for(uint i=0,l=allrooms.length();i<l;i++)
+     if (player.IsKnownLoc(true, allrooms[i]))
+      {
+        Location@ loc = GetLocation(allrooms[i]);
+        if((valid(loc)) and (!loc.AutoGarbage)) return allrooms[i];
+      }
+   }
+  return 0;
+}
+
+uint e_Teleport(uint[]@ val)//событие телепортации
+{
+ uint playerid=val[0];
+ uint mapid=val[1];
+ Critter @ player=GetCritter(playerid);
+ if (!valid (player)) return 0;
+ player.TransitToMap(mapid, 0);
+ return 0;
+}
+
+bool CheckItemIsBook(Item @ item)//книжка
+{
+	if(!valid(item)) return false;
+	return Present(item.GetProtoId(), Pids_Books);
+}
+
+void delMan( Critter& cr, int p0, int p1, int p2 )
+{
+  uint16 hx=0;
+  uint16 hy=0;
+  Location@ [] locs;
+  GetAllLocations(LOCATION_Hotel_Room, locs);
+  GetAllLocations(LOCATION_Hotel_Room2, locs);
+  GetAllLocations(LOCATION_Hotel_Room3, locs);
+ Log ("hotel1" + locs.length());
+  for(uint i=0,l=locs.length();i<l;i++)
+   {
+   if (!locs[i].AutoGarbage)//jобрабатываем только ещё не помеченые на удаление
+      {
+	     Map @ map = locs[i].GetMapByIndex(0);
+	     GameVar @ lasttime = GetLocalVar(LLVAR_hotel_last_time, locs[i].Id);
+       uint time=__FullSecond+ROOM_LIFE_TIME;
+       if ((lasttime<__FullSecond+ROOM_LIFE_TIME) and (map.GetCritters(0, FIND_ALL|FIND_ONLY_PLAYERS, null)==0))//комната стоит слишком долго и постояльца там нет, удалить
+        {
+		      GameVar @ master = GetLocalVar(LLVAR_hotel_room_master, locs[i].Id);
+          uint playerid=uint(master.GetValue());
+          if (playerid>0)//актуальная версия комнаты, старые пусть закрываются по старой схеме
+           {
+        	   HotelPut(map, playerid);
+             uint hotel=ToBank(map, playerid);//по идее не возвращает ничего внятного, потому что ид отеля возвращается только в исключительных случаях
+        	   string key=ROOMS(hotel);
+             uint[] allrooms;
+             if(GetAnyData(key, allrooms))
+              {
+		    	      for(uint j=0;j<allrooms.length();j++)
+                {
+		             if (allrooms[j]==locs[i].Id) allrooms.removeAt(j);
+                }
+				        EraseAnyData(key);
+                SetAnyData(key, allrooms);
+               }
+            locs[i].AutoGarbage=true;
+			      DeleteLocation(locs[i].Id);
+           }
+        }
+      }
+   }
+}
+
+void StartManT( Critter& cr, int p0, int p1, int p2 )
+{
+    GameVar@ delevent = GetGlobalVar(GVAR_hotel_delete_room_event);
+    delevent=CreateTimeEvent(__FullSecond+ROOM_LIFE_TIME, "e_CloseLocs", true);
+    GameVar@ destroyevent = GetGlobalVar(GVAR_hotel_destroy_room_event);
+    destroyevent=CreateTimeEvent(__FullSecond+DESTROY_TIME, "e_DestroyLocs", true);
+}
+

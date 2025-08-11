@@ -12,6 +12,24 @@
 
 #include "ScriptParser.h"
 
+// Состояние меню
+struct ContextMenu {
+    bool open = false;
+    Vector2 pos = { 0,0 };             // экранная позиция открытия
+    int targetNodeId = -1;           // если меню привязано к ноде
+    std::vector<ContextMenuItem> items;
+    int hoveredIndex = -1;
+    float padding = 6.0f;
+    float itemHeight = 20.0f;
+    int fontSize = 12;
+} g_contextMenu;
+
+void UpdateContextMenu();
+void DrawContextMenu();
+// Открыть меню для ноды: устанавливаем позицию и targetNodeId, и наполняем items через BuildNodeContextMenu
+void OpenNodeContextMenu(int nodeId, Vector2 screenPos);
+void CloseContextMenu() { g_contextMenu.open = false; g_contextMenu.items.clear(); g_contextMenu.hoveredIndex = -1; }
+
 struct ConnectionDrag {
     bool active = false;
     int nodeId = -1;
@@ -33,6 +51,7 @@ static void ClearFosbBtn();                // Button: clear_fosb_btn logic
 
 std::string LoadFileContent(const std::string& filePath);
 
+void UpdateHoveredConnectionIndex();
 void UpdateLayout(Rectangle* recs, int screenWidth, int screenHeight);
 void GraphUpdate(Rectangle graphArea);
 void GraphDraw(Rectangle graphArea);
@@ -40,7 +59,9 @@ Vector2 SnapToGrid(Vector2 pos);
 
 void DrawNode(const NodeBase& node);
 void NodeUpdate(NodeBase& node);
-
+static float Vector2DistanceSqrLine(const Vector2& p, const Vector2& a, const Vector2& b);
+static bool AreTypesCompatible(EVarType outType, EVarType inType);
+static bool IsNumericType(EVarType t);
 
 Vector2 GetPortScreenPosition(const NodeBase& node, int portId);
 void DrawConection();
@@ -62,8 +83,8 @@ bool isShowConsole = false;
 static int g_draggingNodeId = -1;
 static Vector2 g_dragStartMouseWorld = { 0,0 };
 static Vector2 g_dragStartNodePos = { 0,0 };
-
-
+static int g_hoveredConnectionIndex = -1;
+static int g_SelectedNode = -1;
 // Получение следующего ID ноды (простая реализация)
 static int GetNextNodeId(const ScriptFile& file) {
     int maxId = 0;
@@ -81,9 +102,9 @@ static Vector2 WorldToScreen(const Vector2& world) {
 
 static Rectangle CalculateNodeRect(const NodeBase& node)
 {
-    int NodeSize = 64;
+    int NodeSize = 128;
     float scaledNode = NodeSize * graphScale;
-    float minWidth = scaledNode;
+    float minWidth = scaledNode * 2;
     float minHeight = scaledNode;
     float nameWidth = node.name.size() * 8.0f * graphScale + 30.0f * graphScale;
     float width = std::max(minWidth, nameWidth);
@@ -154,36 +175,70 @@ void DisconnectAllForPort(ScriptFile& file, int nodeId, int portId) {
 }
 
 
-// Попытка завершить drag соединения — если отпустили над портом — соединяем
 void TryFinishConnectionDrag(ScriptFile& scriptFile) {
     if (!g_connDrag.active) return;
     Vector2 mouse = GetMousePosition();
 
-    // Найдём порт под курсором
     for (auto& nodePtr : scriptFile.Nodes) {
         NodeBase* node = nodePtr.get();
         for (const auto& port : node->ports) {
             Vector2 ppos = GetPortScreenPosition(*node, port.ID);
             float radius = 6.0f * graphScale;
-            if (CheckCollisionPointCircle(mouse, ppos, radius)) {
-                // избежать соединения вход->вход или выход->выход
-                if (g_connDrag.isOutput && port.isInput) {
-                    // g_connDrag.nodeId:g_connDrag.portId -> node.ID:port.ID
-                    ConnectPorts(scriptFile, g_connDrag.nodeId, g_connDrag.portId, node->ID, port.ID);
-                }
-                else if (!g_connDrag.isOutput && !port.isInput) {
-                    // если начали с входа и отпустили на выходе — перевернём
-                    ConnectPorts(scriptFile, node->ID, port.ID, g_connDrag.nodeId, g_connDrag.portId);
+            if (!CheckCollisionPointCircle(mouse, ppos, radius)) continue;
+
+            // Избегаем соединений same node same port
+            if (g_connDrag.nodeId == node->ID && g_connDrag.portId == port.ID) { CancelConnectionDrag(); return; }
+
+            NodeBase* srcNode = FindNodeById(scriptFile, g_connDrag.nodeId);
+            if (!srcNode) { CancelConnectionDrag(); return; }
+
+            // Узнаём исходный порт
+            SPort srcPort{};
+            bool foundSrc = false;
+            for (const auto& p : srcNode->ports) {
+                if (p.ID == g_connDrag.portId) { srcPort = p; foundSrc = true; break; }
+            }
+            if (!foundSrc) { CancelConnectionDrag(); return; }
+
+            // target port is 'port'
+            const SPort& t = port;
+
+            // Правило 1: exec соединения — только ExecOut -> ExecIn
+            bool srcIsExec = (srcPort.name == "ExecOut" || srcPort.name == "ExecIn");
+            bool tgtIsExec = (t.name == "ExecOut" || t.name == "ExecIn");
+            if (srcIsExec || tgtIsExec) {
+                // разрешаем только выход -> вход и имена должны быть ExecOut -> ExecIn
+                if (!srcPort.isInput && t.isInput && srcPort.name == "ExecOut" && t.name == "ExecIn") {
+                    ConnectPorts(scriptFile, srcNode->ID, srcPort.ID, node->ID, t.ID);
                 }
                 CancelConnectionDrag();
                 return;
             }
+
+            // Правило 2: обычные порты — output -> input и типы совместимы
+            if (!srcPort.isInput && t.isInput) {
+                if (AreTypesCompatible(srcPort.type, t.type)) {
+                    ConnectPorts(scriptFile, srcNode->ID, srcPort.ID, node->ID, t.ID);
+                }
+                else {
+                    // можно показать всплывашку или звук ошибки
+                }
+            }
+            else if (srcPort.isInput && !t.isInput) {
+                // если начали с входа и отпустили на выходе — переворачиваем
+                if (AreTypesCompatible(t.type, srcPort.type)) {
+                    ConnectPorts(scriptFile, node->ID, t.ID, srcNode->ID, srcPort.ID);
+                }
+            }
+            CancelConnectionDrag();
+            return;
         }
     }
 
-    // Если не нашли порт — просто отменим drag
+    // если ничего не найдено — отменяем drag
     CancelConnectionDrag();
 }
+
 
 
 
@@ -222,10 +277,18 @@ void DeleteNode(ScriptFile& scriptFile, int nodeId) {
         std::remove_if(scriptFile.Nodes.begin(), scriptFile.Nodes.end(),
             [&](const std::shared_ptr<NodeBase>& n) { return n->ID == nodeId; }),
         scriptFile.Nodes.end());
+
+    // --- Сброс глобальных состояний ---
+    if (g_draggingNodeId == nodeId) {
+        g_draggingNodeId = -1;
+    }
+    if (g_connDrag.active && g_connDrag.nodeId == nodeId) {
+        g_connDrag.active = false;
+    }
 }
 
 
-static float Vector2DistanceSqrLine(const Vector2& p, const Vector2& a, const Vector2& b);
+
 // точка на кубическом Безьере для t in [0..1]
 static Vector2 BezierCubicPoint(float t, const Vector2& p0, const Vector2& p1, const Vector2& p2, const Vector2& p3) {
     float u = 1.0f - t;
@@ -272,7 +335,13 @@ static float Vector2DistanceSqrLine(const Vector2& p, const Vector2& a, const Ve
     return DistPointToSegmentSquared(p, a, b);
 }
 
-
+static Rectangle MakeBezierBounds(const Vector2& p0, const Vector2& p1, const Vector2& p2, const Vector2& p3) {
+    float minx = std::min(std::min(p0.x, p1.x), std::min(p2.x, p3.x));
+    float maxx = std::max(std::max(p0.x, p1.x), std::max(p2.x, p3.x));
+    float miny = std::min(std::min(p0.y, p1.y), std::min(p2.y, p3.y));
+    float maxy = std::max(std::max(p0.y, p1.y), std::max(p2.y, p3.y));
+    return Rectangle{ minx, miny, maxx - minx, maxy - miny };
+}
 
 int FindConnectionIndexAtPosition(const ScriptFile& file, const Vector2& mouse, float pickThreshold = 8.0f) {
     for (size_t i = 0; i < file.connections.size(); ++i) {
@@ -289,4 +358,69 @@ int FindConnectionIndexAtPosition(const ScriptFile& file, const Vector2& mouse, 
         if (dist <= pickThreshold) return (int)i;
     }
     return -1;
+}
+
+
+
+static bool IsNumericType(EVarType t) {
+    return t == EVarType::Int || t == EVarType::UInt || t == EVarType::UInt8 || t == EVarType::Float;
+}
+
+static bool IsExecPort(const SPort& p) {
+    return p.name == "ExecIn" || p.name == "ExecOut";
+}
+
+static bool AreTypesCompatible(EVarType outType, EVarType inType) {
+    if (outType == inType) return true;
+    // разрешаем присваивание чисел между собой (инт->флоат и т.п.)
+    if (IsNumericType(outType) && IsNumericType(inType)) return true;
+    // можно расширить правила: Item->ItemCl, Critter& -> Critter и т.д.
+    return false;
+}
+
+
+static Color HexToColor(const std::string& hex) {
+    std::string h = hex;
+    if (!h.empty() && h[0] == '#') h = h.substr(1);
+    // ожидаем 6 символов
+    if (h.size() != 6) return WHITE;
+    int r = 0, g = 0, b = 0;
+    try {
+        r = std::stoi(h.substr(0, 2), nullptr, 16);
+        g = std::stoi(h.substr(2, 2), nullptr, 16);
+        b = std::stoi(h.substr(4, 2), nullptr, 16);
+    }
+    catch (...) {
+        return WHITE;
+    }
+    return Color{ (unsigned char)r, (unsigned char)g, (unsigned char)b, 255 };
+}
+
+// Хелпер: среднее/смешивание двух цветов
+static Color MixColor(const Color& a, const Color& b) {
+    unsigned char r = (unsigned char)(((int)a.r + (int)b.r) / 2);
+    unsigned char g = (unsigned char)(((int)a.g + (int)b.g) / 2);
+    unsigned char bl = (unsigned char)(((int)a.b + (int)b.b) / 2);
+    return Color{ r, g, bl, 255 };
+}
+
+// Мапа: EVarType -> hex string (на основе данных, которые дал)
+static Color ColorForVarType(EVarType t) {
+    static const std::unordered_map<EVarType, std::string> mapHex = {
+        { EVarType::Int,     "#ffaaaa" },
+        { EVarType::UInt,    "#aaffaa" },
+        { EVarType::UInt8,   "#aaaaff" },
+        { EVarType::Float,   "#ffffaa" },
+        { EVarType::Bool,    "#ffccff" },
+        { EVarType::String,  "#cccccc" },
+        { EVarType::Critter, "#ffaa88" },
+        { EVarType::CritterCl,"#88aaff"},
+        { EVarType::ProtoItem,"#88ffaa"},
+        { EVarType::Item,    "#ffaaff" },
+        { EVarType::ItemCl,  "#aaffff" }
+    };
+
+    auto it = mapHex.find(t);
+    if (it != mapHex.end()) return HexToColor(it->second);
+    return WHITE;
 }

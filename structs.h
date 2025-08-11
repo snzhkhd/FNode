@@ -4,7 +4,7 @@
 #include <variant>
 #include <memory>
 #include "raylib.h"
-
+#include <functional>
 enum class EVarType {
     Int,
     UInt,
@@ -35,6 +35,8 @@ struct SConnection
     int inputPortID;
     int outputNodeId;  // ID исходного узла
     int outputPortID;// Имя выходного порта
+
+    bool isTemp = false;
 };
 
 struct sBase
@@ -61,11 +63,14 @@ struct NodeBase : public sBase
 
     std::vector<SVariables> Variables;
     std::vector<NodeBase> Function;
+
+    std::string sourceFile;
 };
 
 struct Imports : public sBase
 {
-    std::vector<SPort> ports;
+    std::vector<SPort> ports; 
+    std::string sourceFile;
 
     int from; //ID;
 };
@@ -74,11 +79,12 @@ class ScriptFile
 {
 public:
     int ID;
+    std::string name;
     std::vector<std::shared_ptr<NodeBase>> Nodes;
     std::vector<SConnection> connections;
     std::vector<SVariables> Variables;
 
-    std::vector<Imports> Importes; // пока импорты не будут выводится не куда, но заполнить их нужно
+    std::vector<Imports> Import;
 
 
     void AddNode(std::shared_ptr<NodeBase> node) { Nodes.push_back(node); }
@@ -90,23 +96,21 @@ public:
 };
 
 
+// Один пункт меню
+struct ContextMenuItem {
+    std::string label;
+    std::function<void()> action; // действие при клике
+    bool enabled = true;          // если false - пункт не кликабелен
+    bool isSeparator = false;     // разделитель
+    // Можно добавить: std::vector<ContextMenuItem> children; // для submenus
+    ContextMenuItem() = default;
+    ContextMenuItem(std::string l, std::function<void()> a, bool e = true)
+        : label(std::move(l)), action(std::move(a)), enabled(e), isSeparator(false) {}
+    static ContextMenuItem Separator() { ContextMenuItem it; it.isSeparator = true; return it; }
+};
 
-//struct PinTypeInfo {
-//    const char* name;
-//    PinBaseType baseType;
-//    const char* color; // для рисования в нодах
-//};
-//
-//inline static PinTypeInfo PinTypes[] = {
-//    {"int",       PinBaseType::Int,       "#ffaaaa"},
-//    {"uint",      PinBaseType::UInt,      "#aaffaa"},
-//    {"uint8",     PinBaseType::UInt8,     "#aaaaff"},
-//    {"float",     PinBaseType::Float,     "#ffffaa"},
-//    {"bool",      PinBaseType::Bool,      "#ffccff"},
-//    {"string",    PinBaseType::String,    "#cccccc"},
-//    {"Critter",   PinBaseType::Critter,   "#ffaa88"},
-//    {"CritterCl", PinBaseType::CritterCl, "#88aaff"},
-//    {"ProtoItem", PinBaseType::ProtoItem, "#88ffaa"},
-//    {"Item",      PinBaseType::Item,      "#ffaaff"},
-//    {"ItemCl",    PinBaseType::ItemCl,    "#aaffff"},
-//};
+
+
+
+
+
