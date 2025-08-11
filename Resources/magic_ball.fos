@@ -1,0 +1,303 @@
+// Author: FNode Tester
+// Тестовый скрипт для проверки системы визуального программирования
+// Этот скрипт проверяет:
+// - Все типы данных
+// - Разные структуры кода (ветвления, циклы)
+// - Вызовы функций друг из друга
+// - Глобальные переменные
+// - Условные операторы
+// - Встроенные функции
+// - Импортированные функции
+// - Сложные выражения
+
+#include "_macros.fos"
+#include "_msgstr.fos"
+
+// Импортируем функции из других модулей
+import int CalculateDamage(int baseDamage, int armor) from "combat";
+import void ShowMessage(string message) from "ui";
+import bool IsPlayerInCombat(Critter& cr) from "combat";
+import string FormatNumber(int number) from "utils";
+
+// Глобальные переменные
+#define MAX_HEALTH 100
+#define CRITICAL_MULTIPLIER 1.5
+
+// Состояния игры
+enum GameState {
+    STATE_MENU,
+    STATE_PLAYING,
+    STATE_PAUSED
+};
+
+// Структура для хранения информации об игроке
+struct PlayerInfo {
+    int health;
+    int mana;
+    int level;
+    string playerName;
+};
+
+// Глобальные переменные
+int g_CurrentState = STATE_MENU;
+PlayerInfo g_Player = {100, 50, 1, "TestPlayer"};
+
+// Инициализация игры
+void InitializeGame() {
+    g_CurrentState = STATE_PLAYING;
+    ShowMessage("Игра запущена!");
+    
+    // Установка начальных параметров
+    g_Player.health = MAX_HEALTH;
+    g_Player.mana = 50;
+    
+    // Вызов другой функции
+    SetupPlayer();
+    
+    // Вызов функции с возвратом
+    int level = GetPlayerLevel();
+    g_Player.level = level;
+    
+    // Вызов импортированной функции
+    string formattedLevel = FormatNumber(level);
+    ShowMessage("Уровень игрока: " + formattedLevel);
+}
+
+// Настройка игрока
+void SetupPlayer() {
+    // Пример использования условного оператора
+    if (g_Player.health > 50) {
+        ShowMessage("Игрок в хорошем состоянии");
+    } else {
+        ShowMessage("Игрок ранен");
+    }
+    
+    // Вызов функции с параметрами
+    HealPlayer(20);
+    
+    // Вызов функции с несколькими параметрами
+    ApplyBuff("Strength", 300);
+    
+    // Пример использования цикла
+    for (int i = 0; i < 3; i++) {
+        ShowMessage("Подготовка к бою: " + FormatNumber(i+1));
+    }
+}
+
+// Получение уровня игрока
+int GetPlayerLevel() {
+    // Пример использования Random
+    int randomLevel = Random(1, 10);
+    
+    // Пример сложного выражения
+    int calculatedLevel = (randomLevel * 2) + g_Player.health / 10;
+    
+    // Пример использования условного оператора с возвратом
+    if (calculatedLevel > 10) {
+        return 10;
+    } else {
+        return calculatedLevel;
+    }
+}
+
+// Лечение игрока
+void HealPlayer(int amount) {
+    // Проверка границ
+    if (amount < 0) {
+        ShowMessage("Некорректное значение лечения");
+        return;
+    }
+    
+    // Обновление здоровья
+    g_Player.health += amount;
+    
+    // Проверка максимального здоровья
+    if (g_Player.health > MAX_HEALTH) {
+        g_Player.health = MAX_HEALTH;
+    }
+    
+    // Отображение сообщения
+    ShowMessage("Игрок вылечен на " + FormatNumber(amount) + " ед.");
+}
+
+// Применение баффа
+void ApplyBuff(string buffName, int duration) {
+    // Пример использования строковых операций
+    string message = "Применен бафф: " + buffName + " на " + FormatNumber(duration) + " сек.";
+    
+    // Вызов импортированной функции
+    ShowMessage(message);
+    
+    // Пример использования switch
+    switch (buffName) {
+        case "Strength":
+            g_Player.strength += 5;
+            break;
+        case "Agility":
+            g_Player.agility += 5;
+            break;
+        default:
+            ShowMessage("Неизвестный бафф");
+            break;
+    }
+}
+
+// Обработка боя
+bool HandleCombat(Critter& player, Critter& enemy) {
+    // Проверка, находится ли игрок в бою
+    if (!IsPlayerInCombat(player)) {
+        return false;
+    }
+    
+    // Расчет урона
+    int baseDamage = 10;
+    int armor = enemy.Stat[ST_ARMOR_CLASS];
+    int damage = CalculateDamage(baseDamage, armor);
+    
+    // Критический удар
+    float criticalChance = player.Stat[ST_LUCK] * 0.05;
+    if (Random(0, 100) < criticalChance * 100) {
+        damage = (int)(damage * CRITICAL_MULTIPLIER);
+        ShowMessage("Критический удар!");
+    }
+    
+    // Нанесение урона
+    enemy.Health -= damage;
+    ShowMessage("Нанесено " + FormatNumber(damage) + " урона");
+    
+    // Проверка смерти врага
+    if (enemy.Health <= 0) {
+        ShowMessage("Враг повержен!");
+        return true;
+    }
+    
+    return false;
+}
+
+// Обработка нажатия клавиш
+void HandleKeyPress(int keyCode) {
+    // Пример использования switch
+    switch (keyCode) {
+        case KEY_ESCAPE:
+            TogglePause();
+            break;
+        case KEY_SPACE:
+            Jump();
+            break;
+        case KEY_E:
+            Interact();
+            break;
+        default:
+            // Обработка других клавиш
+            ProcessOtherKey(keyCode);
+            break;
+    }
+}
+
+// Переключение паузы
+void TogglePause() {
+    if (g_CurrentState == STATE_PLAYING) {
+        g_CurrentState = STATE_PAUSED;
+        ShowMessage("Игра приостановлена");
+    } else if (g_CurrentState == STATE_PAUSED) {
+        g_CurrentState = STATE_PLAYING;
+        ShowMessage("Игра продолжается");
+    }
+}
+
+// Прыжок игрока
+void Jump() {
+    // Пример сложного условия
+    if (g_Player.health > 20 && g_Player.mana >= 10 && !IsPlayerInCombat(g_Player)) {
+        g_Player.mana -= 10;
+        ShowMessage("Игрок прыгнул");
+    } else {
+        ShowMessage("Не хватает ресурсов для прыжка");
+    }
+}
+
+// Взаимодействие с объектом
+void Interact() {
+    // Пример вложенных условий
+    if (g_CurrentState == STATE_PLAYING) {
+        if (IsObjectNearby()) {
+            if (CanInteract()) {
+                PerformInteraction();
+            } else {
+                ShowMessage("Нельзя взаимодействовать");
+            }
+        } else {
+            ShowMessage("Нет объектов поблизости");
+        }
+    } else {
+        ShowMessage("Сначала запустите игру");
+    }
+}
+
+// Проверка наличия объектов поблизости
+bool IsObjectNearby() {
+    // Имитация проверки
+    return Random(0, 100) > 30;
+}
+
+// Проверка возможности взаимодействия
+bool CanInteract() {
+    return g_Player.mana > 5;
+}
+
+// Выполнение взаимодействия
+void PerformInteraction() {
+    ShowMessage("Взаимодействие выполнено");
+    g_Player.mana -= 5;
+}
+
+// Обработка других клавиш
+void ProcessOtherKey(int keyCode) {
+    ShowMessage("Нажата клавиша: " + FormatNumber(keyCode));
+}
+
+// Основная функция игры
+void GameLoop() {
+    // Инициализация
+    InitializeGame();
+    
+    // Основной цикл
+    while (g_CurrentState == STATE_PLAYING) {
+        // Обработка ввода
+        int key = GetKeyPressed();
+        if (key != 0) {
+            HandleKeyPress(key);
+        }
+        
+        // Обновление состояния
+        UpdateGameState();
+        
+        // Задержка
+        Wait(100);
+    }
+}
+
+// Обновление состояния игры
+void UpdateGameState() {
+    // Пример использования цикла с условием
+    int i = 0;
+    while (i < 5 && g_Player.health > 0) {
+        // Выполнение каких-то действий
+        i++;
+    }
+    
+    // Проверка состояния игрока
+    if (g_Player.health <= 0) {
+        HandlePlayerDeath();
+    }
+}
+
+// Обработка смерти игрока
+void HandlePlayerDeath() {
+    ShowMessage("Игрок погиб!");
+    g_CurrentState = STATE_MENU;
+    
+    // Сброс параметров
+    g_Player.health = MAX_HEALTH;
+    g_Player.mana = 50;
+}
