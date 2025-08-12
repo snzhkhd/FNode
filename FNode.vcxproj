@@ -149,6 +149,7 @@
   <ItemGroup>
     <ClInclude Include="FileManager.h" />
     <ClInclude Include="main.h" />
+    <ClInclude Include="NodeTemplates.h" />
     <ClInclude Include="PluginLoader.h" />
     <ClInclude Include="ResourceManager.h" />
     <ClInclude Include="ScriptParser.h" />

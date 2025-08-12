@@ -63,13 +63,17 @@ std::string FOnlineScriptParser::RemoveComments(const std::string& code)
 {
     std::string result = code;
 
-    // Удаляем однострочные комментарии
-    std::regex singleLineComment("//.*");
-    result = std::regex_replace(result, singleLineComment, "");
+    try {
+        std::regex singleLineComment("//.*");
+        result = std::regex_replace(result, singleLineComment, "");
 
-    // Удаляем многострочные комментарии
-    std::regex multiLineComment("/\\*[^*]*\\*+(?:[^/*][^*]*\\*+)*/");
-    result = std::regex_replace(result, multiLineComment, "");
+        std::regex multiLineComment(R"(/\*[\s\S]*?\*/)");
+        result = std::regex_replace(result, multiLineComment, "");
+    }
+    catch (const std::regex_error& e) {
+        // Логируй ошибку, можно пропустить очистку комментариев
+        TraceLog(LOG_WARNING, "Regex error in RemoveComments: %s", e.what());
+    }
 
     return result;
 }
@@ -105,6 +109,9 @@ void FOnlineScriptParser::ExtractFunctions(const std::string& code)
     // Удаляем комментарии перед парсингом
     std::string cleanCode = RemoveComments(code);
 
+    const std::unordered_set<std::string> keywords = {
+    "if", "for", "while", "switch", "catch", "return", "else", "do", "try"
+    };
     // Более гибкая регулярка для сигнатуры:
     std::regex funcRegex(R"(([\w:\<\>\*\&\s]+?)\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*(?:const|noexcept|override|final)?\s*\{)",
         std::regex::ECMAScript);
@@ -117,6 +124,15 @@ void FOnlineScriptParser::ExtractFunctions(const std::string& code)
         func.returnType.erase(0, func.returnType.find_first_not_of(" \t\n\r"));
         func.returnType.erase(func.returnType.find_last_not_of(" \t\n\r") + 1);
         func.name = match[2].str();
+
+        if (keywords.find(func.name) != keywords.end()) {
+            // Если это ключевое слово, пропускаем и идём дальше
+            size_t offset = static_cast<size_t>(std::distance(cleanCode.cbegin(), searchStart));
+            size_t relMatchPos = static_cast<size_t>(match.position(0));
+            size_t startPos = offset + relMatchPos + static_cast<size_t>(match.length(0));
+            searchStart = cleanCode.cbegin() + startPos;
+            continue;
+        }
 
         // Парсим параметры
         ParseFunctionParameters(match[3].str(), func.parameters);
@@ -160,9 +176,9 @@ void FOnlineScriptParser::CreateNodes(ScriptFile& scriptFile)
         auto node = std::make_shared<NodeBase>();
         node->ID = nextNodeId++;
         node->name = functions[i].name;
-        if (!functions[i].sourceFile.empty())
-            node->name += " ( from \"" + functions[i].sourceFile + "\" )";
-
+        /*if (!functions[i].sourceFile.empty())
+            node->name += " ( from \"" + functions[i].sourceFile + "\" )";*/
+        node->sourceFile = functions[i].sourceFile;
         node->position = {
             startX + (i % 4) * xSpacing,
             startY + (i / 4) * ySpacing
@@ -175,7 +191,8 @@ void FOnlineScriptParser::CreateNodes(ScriptFile& scriptFile)
             SPort execIn;
             execIn.name = "ExecIn";
             execIn.ID = portId++;
-            execIn.type = EVarType::Bool;
+            execIn.type = EVarType::EXEC;
+            //TraceLog(LOG_INFO, "Set execIn.type = %d for node %s", (int)execIn.type, node->name.c_str());
             execIn.isArray = false;
             execIn.isInput = true;
             node->ports.push_back(execIn);
@@ -183,7 +200,8 @@ void FOnlineScriptParser::CreateNodes(ScriptFile& scriptFile)
             SPort execOut;
             execOut.name = "ExecOut";
             execOut.ID = portId++;
-            execOut.type = EVarType::Bool;
+            execOut.type = EVarType::EXEC;
+
             execOut.isArray = false;
             execOut.isInput = false;
             node->ports.push_back(execOut);
@@ -266,6 +284,7 @@ void FOnlineScriptParser::CreateConnections(ScriptFile& scriptFile)
         }
     }
 }
+
 
 void FOnlineScriptParser::ParseFunctionParameters(const std::string& paramsStr, std::vector<std::pair<std::string, EVarType>>& params)
 {

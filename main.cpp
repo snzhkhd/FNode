@@ -1,7 +1,8 @@
 #define _CRT_SECURE_NO_WARNINGS
-#include "main.h"
+#include "NodeTemplates.h"
 #include "FileManager.h"
 
+#include "raymath.h"
 ScriptFile CurrentFile;
 
 char* CreateIconText(int iconCode, const char* text) {
@@ -22,10 +23,14 @@ int main()
 {
     // Initialization
     //---------------------------------------------------------------------------------------
-    int screenWidth = 1600;
-    int screenHeight = 900;
-
-    InitWindow(screenWidth, screenHeight, "FNode gui" );
+    if (LoadSettings("config.json"))
+    {
+        WindowSize.x = g_settings.windowWidth;
+        WindowSize.y = g_settings.windowHeight;
+        CONNECTOR_HANDLE_LENGTH = g_settings.connectorHandleLength;
+        BASE_CONNECTOR_THICKNESS = g_settings.baseConnectorThickness;
+    }
+    InitWindow(WindowSize.x, WindowSize.y, "FNode gui" );
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(600, 400);
 
@@ -38,14 +43,6 @@ int main()
         // Теперь scriptFile содержит узлы и соединения
         TraceLog(LOG_INFO, "Parsed %d functions", CurrentFile.Nodes.size());
 
-        for (auto f : CurrentFile.Nodes)
-        {
-            TraceLog(LOG_INFO, "%s", f->name.c_str());
-        }
-       
-        TraceLog(LOG_INFO, "Found %d connections", CurrentFile.connections.size());
-
-        // Теперь можно рисовать узлы и соединения
     }
     else {
         TraceLog(LOG_ERROR, "Failed to parse script");
@@ -55,6 +52,8 @@ int main()
     TraceLog(ok ? LOG_INFO : LOG_WARNING, "LoadScriptFileByName('%s') -> %d", CurrentFile.name.c_str(), (int)ok);
     
     TraceLog(LOG_INFO, "Found %d Import", CurrentFile.Import.size());
+
+    
     //std::vector<int> cp;
     //for (int c = 32; c < 127; ++c) cp.push_back(c);
     //for (int c = 0x0400; c <= 0x0450; ++c) cp.push_back(c);
@@ -165,30 +164,37 @@ int main()
     };
     //----------------------------------------------------------------------------------
 
-   
-
+    Browse_scrollPanelBounds = layoutRecs[9];
+    ScanFosScripts(ScriptFolder);
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
-
+    AutoArrangeNodes(CurrentFile, 100, 100, 500, 256);
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
         // Update
         //----------------------------------------------------------------------------------
         UpdateLayout(layoutRecs, GetScreenWidth(), GetScreenHeight());
-        GraphUpdate(layoutRecs[17]);
 
-        for (auto& nptr : CurrentFile.Nodes) {
-            NodeUpdate(*nptr);
-        }
-        UpdateHoveredConnectionIndex();
+        Browse_scrollPanelBounds = layoutRecs[9];
+        GraphUpdate(GraphRect);
 
-        // обработка удаления по правому клику:
-        if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON) && g_hoveredConnectionIndex != -1) {
-            CurrentFile.connections.erase(CurrentFile.connections.begin() + g_hoveredConnectionIndex);
-            g_hoveredConnectionIndex = -1;
+        if (!showSettingsWindow && CheckCollisionPointRec(GetMousePosition(), GraphRect))
+        {
+            for (auto& nptr : CurrentFile.Nodes) {
+                NodeUpdate(*nptr);
+            }
+            UpdateHoveredConnectionIndex();
+
+            // обработка удаления по правому клику:
+            if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON) && g_hoveredConnectionIndex != -1) {
+                CurrentFile.connections.erase(CurrentFile.connections.begin() + g_hoveredConnectionIndex);
+                g_hoveredConnectionIndex = -1;
+            }
+            UpdateContextMenu();
         }
-        UpdateContextMenu();
+
+       
         //----------------------------------------------------------------------------------
         // Draw
         //----------------------------------------------------------------------------------
@@ -196,6 +202,7 @@ int main()
 
         ClearBackground(GetColor(GuiGetStyle(DEFAULT, BACKGROUND_COLOR)));
 
+       
         // raygui: controls drawing
         //----------------------------------------------------------------------------------
         // Draw controls
@@ -210,17 +217,17 @@ int main()
         Rectangle panelBounds = {
         layoutRecs[3].x,
         layoutRecs[3].y,
-        layoutRecs[3].width - function_ScrollPanelBoundsOffset.x,
+        layoutRecs[3].width - function_ScrollPanelBoundsOffset.x ,
         layoutRecs[3].height - function_ScrollPanelBoundsOffset.y
         };
 
         // Область внутри панели (виртуальная "бумага")
-        Rectangle contentBounds = { 0, 0, panelBounds.width - 20, (float)CurrentFile.Nodes.size() * 24 }; // 24px на элемент
+        Rectangle contentBounds = { 0, 0, panelBounds.width - 20, (float)CurrentFile.Nodes.size() * 24  }; // 24px на элемент
         Rectangle viewArea = { 0 };
         GuiScrollPanel(panelBounds, "", contentBounds, &function_ScrollPanelScrollOffset, &viewArea);
         BeginScissorMode(
             (int)viewArea.x,
-            (int)viewArea.y,
+            (int)viewArea.y ,
             (int)viewArea.width,
             (int)viewArea.height
         );
@@ -230,14 +237,15 @@ int main()
         for (size_t i = 0; i < CurrentFile.Nodes.size(); i++)
         {
             const auto& node = *CurrentFile.Nodes[i];
-            Rectangle btn = { panelBounds.x + 5, y + i * 24, panelBounds.width - 30, 20 };
+            Rectangle btn = { panelBounds.x + 5, y + i * 24 +24, panelBounds.width - 30, 20 };
 
-            if (CheckCollisionPointRec(GetMousePosition(), btn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            if (CheckCollisionPointRec(GetMousePosition(), viewArea) && CheckCollisionPointRec(GetMousePosition(), btn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+            {
                 // Действие при нажатии
                 printf("Clicked node: %s\n", node.name.c_str());
 
-                graphOffset.x = (node.position.x * graphScale) - (layoutRecs[17].width / 2.0f);
-                graphOffset.y = (node.position.y * graphScale) - (layoutRecs[17].height / 2.0f);
+                graphOffset.x = (node.position.x * graphScale) - (GraphRect.width / 2.0f);
+                graphOffset.y = (node.position.y * graphScale) - (GraphRect.height / 2.0f);
                 g_SelectedNode = node.ID;
             }
             GuiButton(btn, node.name.c_str());
@@ -247,11 +255,15 @@ int main()
         GuiScrollPanel(Rectangle{ layoutRecs[4].x, layoutRecs[4].y, layoutRecs[4].width - vars_ScrollPanelBoundsOffset.x, layoutRecs[4].height - vars_ScrollPanelBoundsOffset.y }, "", layoutRecs[4], & vars_ScrollPanelScrollOffset, & vars_ScrollPanelScrollView);
         GuiScrollPanel(Rectangle{ layoutRecs[5].x, layoutRecs[5].y, layoutRecs[5].width - lvars_ScrollPanelBoundsOffset.x, layoutRecs[5].height - lvars_ScrollPanelBoundsOffset.y }, "", layoutRecs[5], & lvars_ScrollPanelScrollOffset, & lvars_ScrollPanelScrollView);
         
+        
+        
         if (GuiButton(layoutRecs[6], add_func_btnText)) AddFuncBtn();
         if (GuiButton(layoutRecs[7], add_var_btnText)) AddVarBtn();
         if (GuiButton(layoutRecs[8], add_lvar_btnText)) AddLvarBtn();
 
         GuiGroupBox(layoutRecs[9], browse_GroupBoxText);
+        DrawScriptList();
+
         GuiGroupBox(layoutRecs[10], tool_GroupBoxText);
 
       
@@ -262,8 +274,9 @@ int main()
         if (GuiButton(layoutRecs[15], defines_btnText)) DefinesBtn();
         if (GuiButton(layoutRecs[16], clear_fosb_btnText)) ClearFosbBtn();
 
-        GraphDraw(layoutRecs[17]);
-        GuiGroupBox(layoutRecs[17], graph_GroupBoxText);
+        //GraphDraw(layoutRecs[17]);
+        GraphDraw(GraphRect);
+        GuiGroupBox(GraphRect, graph_GroupBoxText);
 
         if(isShowConsole)
             GuiGroupBox(layoutRecs[18], Console_GroupBoxText);
@@ -271,6 +284,13 @@ int main()
         GuiCheckBox(layoutRecs[19], Console_CheckBoxText, &isShowConsole);
         //----------------------------------------------------------------------------------
         DrawContextMenu();
+
+        DrawContextMenu();
+
+
+        
+        DrawCallingFilesWindow();
+        DrawSettingsWindow();
         EndDrawing();
         //----------------------------------------------------------------------------------
     }
@@ -373,6 +393,92 @@ void DrawContextMenu()
     }
 }
 
+void AutoArrangeNodes(ScriptFile& scriptFile, float startX, float startY, float xSpacing, float ySpacing)
+{
+    if (scriptFile.Nodes.empty()) return;
+
+    // 1) Построим граф exec-ребер: adj[outNode] -> list of inputNode
+    std::unordered_map<int, std::vector<int>> adj;
+    std::unordered_map<int, int> inCount; // входящие exec-ссылки (кол-во)
+
+    // Инициализация всех узлов
+    for (auto& n : scriptFile.Nodes) {
+        inCount[n->ID] = 0;
+    }
+
+    for (auto& conn : scriptFile.connections) {
+        // найдём output-порт и проверим, exec ли он
+        auto outNode = FindNodeById(scriptFile, conn.outputNodeId);
+        if (!outNode) continue;
+
+        bool outIsExec = false;
+        for (auto& p : outNode->ports) {
+            if (p.ID == conn.outputPortID) {
+                outIsExec = (p.type == EVarType::EXEC);
+                break;
+            }
+        }
+        if (!outIsExec) continue; // рассматриваем только exec-ребра
+
+        // добавляем ребро out -> in
+        adj[conn.outputNodeId].push_back(conn.inputNodeId);
+        inCount[conn.inputNodeId] += 1;
+    }
+
+    // 2) Найдём корни (inCount == 0)
+    std::queue<int> q;
+    std::unordered_map<int, int> level; // nodeId -> level (int)
+    for (auto& n : scriptFile.Nodes) {
+        if (inCount[n->ID] == 0) {
+            q.push(n->ID);
+            level[n->ID] = 0;
+        }
+    }
+
+    // Если нет корней (всё циклы), положим всех в уровень 0
+    if (q.empty()) {
+        for (auto& n : scriptFile.Nodes) {
+            q.push(n->ID);
+            level[n->ID] = 0;
+        }
+    }
+
+    // 3) BFS по exec-ребрам, вычисляем уровень (ширина)
+    while (!q.empty()) {
+        int u = q.front(); q.pop();
+        int ulevel = level[u];
+        for (int v : adj[u]) {
+            if (level.find(v) == level.end() || level[v] < ulevel + 1) {
+                level[v] = ulevel + 1;
+            }
+            // добавляем в очередь если ещё не обработан
+            if (inCount.find(v) != inCount.end()) {
+                // чтобы гарантированно пройти все узлы, просто пушим (дубли не страшны)
+                q.push(v);
+            }
+        }
+    }
+
+    // 4) Группируем ноды по уровням
+    std::map<int, std::vector<std::shared_ptr<NodeBase>>> groups;
+    for (auto& n : scriptFile.Nodes) {
+        int lv = 0;
+        auto it = level.find(n->ID);
+        if (it != level.end()) lv = it->second;
+        groups[lv].push_back(n);
+    }
+
+    // 5) Выставляем позиции: X = startX + level*xSpacing, Y = startY + idx*ySpacing
+    for (auto& [lvl, vec] : groups) {
+        float x = startX + lvl * xSpacing;
+        float y = startY;
+        for (auto& node : vec) {
+            node->position = { x, y };
+            y += ySpacing;
+        }
+    }
+}
+
 //------------------------------------------------------------------------------------
 // Controls Functions Definitions (local)
 //------------------------------------------------------------------------------------
@@ -413,7 +519,17 @@ static void CompileBtn()
 // Button: setting_btn logic
 static void SettingBtn()
 {
-    // TODO: Implement control logic
+    // Открываем окно при первом вызове
+    if (!showSettingsWindow)
+    {
+        showSettingsWindow = true;
+        // Копируем текущие значения в временные буферы
+        strncpy(folderInput, ScriptFolder.c_str(), sizeof(folderInput) - 1);
+        inputWindowWidth = WindowSize.x;
+        inputWindowHeight = WindowSize.y;
+        inputConnectorHandleLength = CONNECTOR_HANDLE_LENGTH;
+        inputBaseConnectorThickness = BASE_CONNECTOR_THICKNESS;
+    }
 }
 // Button: gvars_btn logic
 static void GvarsBtn()
@@ -502,8 +618,8 @@ void UpdateLayout(Rectangle* recs, int screenWidth, int screenHeight) {
     int rightX = SPACING + LEFT_PANEL_WIDTH + SPACING;
     int rightWidth = screenWidth - rightX - SPACING ;
 
-    // Граф редактор занимает большую часть правой области
-    recs[17] = Rectangle{
+    // Граф редактор занимает большую часть правой области  recs[17]
+    GraphRect = Rectangle{
         (float)rightX,
         (float)(TOOLBAR_HEIGHT + SPACING),
         (float)(rightWidth - 200 - SPACING), // Оставляем место для браузера
@@ -531,7 +647,7 @@ void GraphUpdate(Rectangle graphArea)
     Vector2 mousePos = GetMousePosition();
     bool mouseInGraphArea = CheckCollisionPointRec(mousePos, graphArea);
 
-    if (!mouseInGraphArea)
+    if (!mouseInGraphArea || showCallersWindow)
         return;
 
     // --- Перетаскивание ---
@@ -571,8 +687,39 @@ void GraphUpdate(Rectangle graphArea)
             };
 
             // корректируем смещение так, чтобы точка под мышью осталась на месте
-            graphOffset.x += (afterZoom.x - beforeZoom.x) * graphScale;
-            graphOffset.y += (afterZoom.y - beforeZoom.y) * graphScale;
+            graphOffset.x -= (afterZoom.x - beforeZoom.x) * graphScale;
+            graphOffset.y -= (afterZoom.y - beforeZoom.y) * graphScale;
+        }
+    }
+
+
+    // detect double-click on empty space -> open action palette
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && CheckCollisionPointRec(GetMousePosition(), graphArea)) {
+        Vector2 m = GetMousePosition();
+
+        // если клик — по ноде, ничего не делаем (позже NodeUpdate обработает)
+        if (!IsPointOverAnyNode(CurrentFile, m, graphArea)) {
+            float now = GetTime();
+            float dt = now - g_actionPalette.lastClickTime;
+            float dist = Vector2Distance(m, g_actionPalette.lastClickPos);
+
+            // threshold: 0.35s и расстояние < 8 px
+            if (dt < 0.35f && dist < 8.0f) {
+                // двойной клик — откроем палитру
+                g_actionPalette.open = true;
+                g_actionPalette.screenPos = m;
+                g_actionPalette.search.clear();
+                g_actionPalette.scrollOffset = { 0,0 };
+                g_actionPalette.scrollView = { 0,0,0,0 };
+                g_actionPalette.hoveredIndex = -1;
+                g_actionPalette.selectedIndex = -1;
+                // замечание: подстраиваем rect так, чтобы не вылезать за экран (опционально)
+                // g_actionPalette.rect.x = std::min(m.x, GetScreenWidth() - g_actionPalette.rect.width);
+                // g_actionPalette.rect.y = std::min(m.y, GetScreenHeight() - g_actionPalette.rect.height);
+            }
+
+            g_actionPalette.lastClickTime = now;
+            g_actionPalette.lastClickPos = m;
         }
     }
 }
@@ -585,6 +732,8 @@ void GraphDraw(Rectangle graphArea)
     }
     if (!checkerTexture) return;
     
+    DrawText(TextFormat("%s",CurrentFile.name.c_str()), (int)graphArea.x + (graphArea.width * 0.5), (int)graphArea.y - 15, 12, BLACK);
+
     BeginScissorMode(
         (int)graphArea.x,
         (int)graphArea.y,
@@ -670,7 +819,7 @@ void GraphDraw(Rectangle graphArea)
     }
 
     EndScissorMode();
-
+    UpdateAndDrawActionPalette(graphArea);
     DrawText(TextFormat("x : %i y : %i ", (int)graphOffset.x, (int)graphOffset.y), (int)graphArea.x , (int)graphArea.y + graphArea.height - 24, 12, BLACK);
 }
 
@@ -692,12 +841,16 @@ void DrawNode(const NodeBase& node)
 
 
     static std::shared_ptr<Texture2D> NodeTexture;
+    static std::shared_ptr<Texture2D> PureNodeTexture;
     static std::shared_ptr<Texture2D> Node_title_Texture;
+    static std::shared_ptr<Texture2D> PureNode_title_Texture;
     static std::shared_ptr<Texture2D> ExecTexture;
     //g_SelectedNode
     static std::shared_ptr<Texture2D> NodeSelectTexture;
     if (!NodeTexture) {
         NodeTexture = ResourceManager::LoadTexture("Resources/RegularNode_body.png");
+        PureNodeTexture = ResourceManager::LoadTexture("Resources/VarNode_body.png");
+        PureNode_title_Texture = ResourceManager::LoadTexture("Resources/VarNode_gloss.png");
         Node_title_Texture = ResourceManager::LoadTexture("Resources/RegularNode_title_gloss.png");
         ExecTexture = ResourceManager::LoadTexture("Resources/ExecPin_Connected.png");
 
@@ -706,8 +859,10 @@ void DrawNode(const NodeBase& node)
     if (!NodeTexture) return;
 
     Rectangle dst = CalculateNodeRect(node); // если есть такая функция — используй, иначе скопируй логику
-    DrawTexturePro(*NodeTexture, { 0,0,(float)NodeTexture->width,(float)NodeTexture->height }, dst, { 0,0 }, 0, Fade(node.isHovered ? LIGHTGRAY : WHITE, 0.5f));
-
+    if(!node.isPure)
+        DrawTexturePro(*NodeTexture, { 0,0,(float)NodeTexture->width,(float)NodeTexture->height }, dst, { 0,0 }, 0, Fade(node.isHovered ? LIGHTGRAY : WHITE, 0.5f));
+    else
+        DrawTexturePro(*PureNodeTexture, { 0,0,(float)PureNodeTexture->width,(float)PureNodeTexture->height }, dst, { 0,0 }, 0, Fade(node.isHovered ? LIGHTGRAY : WHITE, 0.5f));
     float titleHeight = 18.0f * graphScale; // высота полоски заголовка (настраиваемая)
     Rectangle titleDst = { dst.x, dst.y, dst.width, titleHeight }; // экранные координаты
 
@@ -715,16 +870,24 @@ void DrawNode(const NodeBase& node)
     Rectangle titleSrc = { 0.0f, 0.0f, (float)Node_title_Texture->width, (float)Node_title_Texture->height };
 
     // Отрисовать фон заголовка (растянет текстуру по width/height)
-    DrawTexturePro(*Node_title_Texture, titleSrc, titleDst, { 0.0f, 0.0f }, 0.0f, SKYBLUE);
-
+    if (!node.isPure)
+        DrawTexturePro(*Node_title_Texture, titleSrc, titleDst, { 0.0f, 0.0f }, 0.0f, SKYBLUE);
+    else
+    {
+        titleHeight = 18.0f * graphScale;
+        titleSrc = { 0.0f, 0.0f, (float)PureNode_title_Texture->width, (float)PureNode_title_Texture->height };
+        DrawTexturePro(*PureNode_title_Texture, titleSrc, titleDst, { 0.0f, 0.0f }, 0.0f, SKYBLUE);
+    }
  //   DrawText(node.name.c_str(), dst.x + 10 * graphScale, dst.y + 5 * graphScale, 14 * graphScale, WHITE);
 
     if(g_SelectedNode == node.ID)
         DrawRectangleLines(dst.x, dst.y, dst.width, dst.height, ORANGE);// DrawTexturePro(*NodeSelectTexture, { 0,0,(float)NodeTexture->width,(float)NodeTexture->height }, dst, { 0,0 }, 0, WHITE);
 
     
-
-    DrawTextEx(*font, node.name.c_str(), Vector2{ dst.x + 10 * graphScale, dst.y + 5 * graphScale }, 14 * graphScale,1, WHITE);
+    std::string fullName = node.name;
+    if (!node.sourceFile.empty())
+        fullName += " ( from " + node.sourceFile + " )";
+    DrawTextEx(*font, fullName.c_str(), Vector2{dst.x + 10 * graphScale, dst.y + 5 * graphScale}, 14 * graphScale, 1, WHITE);
     NodeBase* srcNode = nullptr;
     SPort srcPort;
     bool hasSrc = false;
@@ -740,17 +903,28 @@ void DrawNode(const NodeBase& node)
     for (const auto& port : node.ports) {
         Vector2 ppos = GetPortScreenPosition(node, port.ID);
         float pinRadius = 5.0f * graphScale;
-
+    //    TraceLog(LOG_INFO, "Node %s port '%s' id=%d type=%d isInput=%d", node.name.c_str(), port.name.c_str(), port.ID, (int)port.type, port.isInput);
         // Если это exec-иконка — рисуем текстуру, иначе — кружок
-        if (!node.isPure && (port.name == "ExecIn" || port.name == "ExecOut")) {
-            // Центруем текстуру по порту
-            float texScale = graphScale; // можно регулировать
+        if (IsExecPort(port)) {
+            // рисуем иконку exec
+            float texScale = graphScale;
             Texture2D& tex = *ExecTexture;
             Vector2 texPos = { ppos.x - (tex.width * 0.5f) * texScale, ppos.y - (tex.height * 0.5f) * texScale };
             DrawTextureEx(tex, texPos, 0.0f, texScale, WHITE);
+
+            // подпись порта (для входа/выхода — показать имя рядом)
+            int fontSize = (int)(12 * graphScale);
+            if (port.isInput) {
+                DrawTextEx(*font, port.name.c_str(), Vector2{ ppos.x + 8 * graphScale, ppos.y - 6 * graphScale }, fontSize, 1, WHITE);
+            }
+            else {
+                int tw = MeasureText(port.name.c_str(), fontSize);
+                DrawTextEx(*font, port.name.c_str(), Vector2{ ppos.x - 8 * graphScale - tw, ppos.y - 6 * graphScale }, fontSize, 1, WHITE);
+            }
         }
         else {
-            DrawCircleV(ppos, pinRadius, port.isInput ? PURPLE : BLUE);
+            Color circleCol = ColorForVarType(port.type);//port.isInput ? PURPLE : ColorForVarType(port.type);
+            DrawCircleV(ppos, pinRadius, circleCol);
             // Рисуем текст: у входа справа, у выхода слева
             int fontSize = (int)(12 * graphScale);
             if (port.isInput) {
@@ -779,10 +953,13 @@ void DrawNode(const NodeBase& node)
 
                     // Если хоть один — exec, применяем строгие exec-правила:
                     if (srcIsExec || tgtIsExec) {
-                        // разрешаем только ExecOut -> ExecIn
-                        if (!srcPort.isInput && port.isInput &&
-                            srcPort.name == "ExecOut" && port.name == "ExecIn") {
-                            // запрет соединять ноду саму с собой, если нужно:
+                        if (!srcPort.isInput && port.isInput && IsExecPort(srcPort) && IsExecPort(port)) {
+                            // запрет соединять ноду саму с собой
+                            if (g_connDrag.nodeId != node.ID) lineColor = GREEN;
+                            else lineColor = RED;
+                        }
+                        else if (srcPort.isInput && !port.isInput && IsExecPort(srcPort) && IsExecPort(port)) {
+                            // пользователь начал drag с входа и отпустил на выходе — это перевернутое соединение
                             if (g_connDrag.nodeId != node.ID) lineColor = GREEN;
                             else lineColor = RED;
                         }
@@ -915,8 +1092,8 @@ void NodeUpdate(NodeBase& node)
 void DrawConection()
 {
 
-    const float HANDLE_LENGTH = 150.0f * graphScale; // Длина "ручек" изгиба
-    const float BASE_LINE_THICKNESS = 4.0f * graphScale;
+    const float HANDLE_LENGTH = CONNECTOR_HANDLE_LENGTH  * graphScale; // Длина "ручек" изгиба
+    const float BASE_LINE_THICKNESS = BASE_CONNECTOR_THICKNESS * graphScale;
 
     // цвет по умолчанию (если типы не определены)
     Color defaultColor = BLUE;
@@ -1010,13 +1187,15 @@ Vector2 GetPortScreenPosition(const NodeBase& node, int portId)
 {
     // Вычисление rect ноды (как в DrawNode)
     int NodeSize = 128;
+    if (node.isPure)
+        NodeSize = 64;
     float scaledNode = NodeSize * graphScale;
     float minWidth = scaledNode * 2;
     float minHeight = scaledNode;
-    float nameWidth = node.name.size() * 8.0f * graphScale + 30.0f * graphScale;
+    float nameWidth = node.name.size() * 8.0f * graphScale + (node.isPure ? 20.0f : 30.0f )* graphScale;
     float width = std::max(minWidth, nameWidth);
     int portsCount = (int)node.ports.size();
-    float height = std::max(minHeight, portsCount * 30.0f * graphScale);
+    float height = std::max(minHeight, portsCount * (node.isPure ? 20.0f : 30.0f) * graphScale);
     float x = node.position.x * graphScale - graphOffset.x;
     float y = node.position.y * graphScale - graphOffset.y;
 
@@ -1053,6 +1232,29 @@ Vector2 GetPortScreenPosition(const NodeBase& node, int portId)
 std::vector<ContextMenuItem> BuildNodeContextMenu(int nodeId) {
     std::vector<ContextMenuItem> out;
 
+
+    out.emplace_back("Find all Calling", [nodeId]() {
+        NodeBase* n = FindNodeById(CurrentFile, nodeId);
+        if (n && !isFindingCallingFiles) {
+            isFindingCallingFiles = true;
+            findProgress = 0.0f;
+
+            std::thread([nodeName = n->name]() {
+                // Очистить старый результат
+                {
+                    std::lock_guard<std::mutex> lock(foundFilesMutex);
+                    foundCallingFiles.clear();
+                }
+
+                // Ваша функция (можно расширить для обновления прогресса внутри)
+                FindCallingFiles(nodeName);
+
+                // В конце
+                isFindingCallingFiles = false;
+                findProgress = 1.0f;
+            }).detach();
+        }
+        });
     // Удалить
     out.emplace_back("Delete Node", [nodeId]() {
         // вызываем вашу функцию удаления ноды
@@ -1091,4 +1293,333 @@ void OpenNodeContextMenu(int nodeId, Vector2 screenPos) {
     g_contextMenu.targetNodeId = nodeId;
     g_contextMenu.items = BuildNodeContextMenu(nodeId);
     g_contextMenu.hoveredIndex = -1;
+}
+
+void UpdateAndDrawActionPalette(const Rectangle& graphArea)
+{
+    if (!g_actionPalette.open) return;
+
+    // Размер и позиция
+    Rectangle pr = g_actionPalette.rect;
+    pr.x = g_actionPalette.screenPos.x;
+    pr.y = g_actionPalette.screenPos.y;
+
+    // Авто-слип/корректировка в пределах экрана
+    int screenW = GetScreenWidth(), screenH = GetScreenHeight();
+    if (pr.x + pr.width > screenW) pr.x = screenW - pr.width - 8;
+    if (pr.y + pr.height > screenH) pr.y = screenH - pr.height - 8;
+    if (pr.x < 8) pr.x = 8;
+    if (pr.y < 8) pr.y = 8;
+
+    DrawRectangleRec(pr, Fade(GRAY, 0.95f));
+    DrawRectangleLinesEx(pr, 1.0f, Fade(BLACK, 0.7f));
+
+    // Заголовок, поиск и чек-бокс
+    Rectangle titleR = { pr.x + 8, pr.y + 8, pr.width - 16, 20 };
+    DrawText("All Actions for this Blueprint", (int)titleR.x, (int)titleR.y, 12, BLACK);
+
+    // search box
+    Rectangle searchR{ pr.x + 8, pr.y + 32, pr.width - 16 - 20, 22 };
+    // используем GuiTextBox (raygui) — если нет, можно рисовать вручную и обрабатывать ввод
+    static char searchBuf[128] = { 0 };
+    // копируем значение в буфер (чтобы GuiTextBox работал)
+    strncpy(searchBuf, g_actionPalette.search.c_str(), sizeof(searchBuf) - 1);
+    if (GuiTextBox(searchR, searchBuf, sizeof(searchBuf), true)) {
+        // GuiTextBox возвращает true при изменении/enter — обновляем строку
+    }
+    g_actionPalette.search = std::string(searchBuf);
+
+    // Context sensitive checkbox
+    static bool cs = g_actionPalette.contextSensitive;
+    Rectangle csRect{ pr.x + pr.width - 16 - 64, pr.y + 32, 16, 16 };
+    if (GuiCheckBox(csRect,"contextSensitive", &cs)) {
+        g_actionPalette.contextSensitive = !g_actionPalette.contextSensitive;
+    }
+
+    // Список шаблонов
+    const float itemH = 22.0f;
+    float listY = pr.y + 60;
+    Rectangle listBounds{ pr.x + 8, listY, pr.width - 16, pr.height - (listY - pr.y) - 12 };
+
+    // Собираем фильтрованный список индексов
+    std::vector<int> filtered;
+    std::string q = ToLower(g_actionPalette.search);
+    for (int i = 0; i < (int)g_NodeTemplates.size(); ++i) {
+        const auto& tpl = g_NodeTemplates[i];
+        std::string nm = ToLower(tpl.name);
+        if (!q.empty() && nm.find(q) == std::string::npos) continue;
+        // TODO: если contextSensitive == true, можно добавить дополнительные проверки
+        filtered.push_back(i);
+    }
+
+    // контентBounds
+    Rectangle contentBounds{ 0, 0, listBounds.width - 20.0f, (float)filtered.size() * itemH + 8.0f };
+    g_actionPalette.scrollView = { listBounds.x, listBounds.y, listBounds.width, listBounds.height };
+
+    GuiScrollPanel(listBounds, "", contentBounds, &g_actionPalette.scrollOffset, &g_actionPalette.scrollView);
+
+    BeginScissorMode((int)g_actionPalette.scrollView.x, (int)g_actionPalette.scrollView.y, (int)g_actionPalette.scrollView.width, (int)g_actionPalette.scrollView.height);
+
+    float y = g_actionPalette.scrollView.y + g_actionPalette.scrollOffset.y + 4.0f;
+    Vector2 mouse = GetMousePosition();
+    g_actionPalette.hoveredIndex = -1;
+
+    for (size_t idx = 0; idx < filtered.size(); ++idx) {
+        int i = filtered[idx];
+        const auto& tpl = g_NodeTemplates[i];
+        Rectangle itRec{ g_actionPalette.scrollView.x + 6.0f, y + idx * itemH, g_actionPalette.scrollView.width - 12.0f, itemH - 4.0f };
+
+        bool hover = CheckCollisionPointRec(mouse, itRec);
+        if (hover) {
+            DrawRectangleRec(itRec, Fade(LIGHTGRAY, 0.8f));
+            g_actionPalette.hoveredIndex = (int)idx;
+        }
+        DrawText(tpl.name.c_str(), (int)(itRec.x + 6), (int)(itRec.y + (itRec.height - 12) * 0.5f), 12, BLACK);
+
+        // Клик одинарный: вставка, двойной: тоже вставка
+        if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+            // Создаём ноду в координатах графа под мышью
+            Vector2 world;
+            // перевод экрана -> мир (используй graphArea — передаём в вызове)
+            Rectangle ga = graphArea; // если вызываем из GraphDraw, передаем graphArea
+            world.x = (mouse.x - ga.x + graphOffset.x) / graphScale;
+            world.y = (mouse.y - ga.y + graphOffset.y) / graphScale;
+
+            auto newNode = AddNodeFromTemplate(CurrentFile, g_NodeTemplates[i], world);
+            g_actionPalette.open = false;
+            g_SelectedNode = newNode->ID;
+
+            // при добавлении центровать/сдвигать не нужно — нода создаётся под мышью
+            break;
+        }
+
+        // обработка двойного клика: если хочешь — можно делать тоже самое
+    }
+
+    EndScissorMode();
+
+    // Закрытие при ESC или клике вне
+    if (IsKeyPressed(KEY_ESCAPE)) { g_actionPalette.open = false; }
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+        if (!CheckCollisionPointRec(mouse, pr)) {
+            // проверяем, не кликнули внутри scrollView (уже обработано выше)
+            if (!CheckCollisionPointRec(mouse, g_actionPalette.scrollView)) {
+                g_actionPalette.open = false;
+            }
+        }
+    }
+}
+
+void ScanFosScripts(const std::string& folderPath)
+{
+    fosFiles.clear();
+    for (auto& p : fs::directory_iterator(folderPath))
+    {
+        if (p.is_regular_file() && p.path().extension() == ".fos")
+        {
+            fosFiles.push_back(p.path().string());
+        }
+    }
+    TraceLog(LOG_INFO, "ScanFosScripts count ->  %i", fosFiles.size());
+    // Можно подстраивать высоту контента под количество файлов
+    Browse_contentBounds.height = fosFiles.size() * 30;
+}
+
+void DrawScriptList()
+{
+
+    //Browse_contentBounds.height = fosFiles.size() * 30;
+
+    Rectangle viewRect = { 0 };
+    Browse_scrollPanelBounds.y += 10;
+    GuiScrollPanel(Browse_scrollPanelBounds, nullptr, Browse_contentBounds, &Browse_scroll, &viewRect);
+
+    // Теперь рисуем кнопки с учётом Browse_scroll и Browse_scrollPanelBounds
+    //Browse_scrollPanelBounds
+
+    BeginScissorMode(
+        (int)viewRect.x,
+        (int)viewRect.y ,
+        (int)viewRect.width,
+        (int)viewRect.height
+    );
+    for (size_t i = 0; i < fosFiles.size(); i++)
+    {
+        Rectangle btnRect = {
+            Browse_scrollPanelBounds.x + 5,
+            Browse_scrollPanelBounds.y + i * 30 + Browse_scroll.y,
+            Browse_scrollPanelBounds.width * 0.80,
+            25
+        };
+
+        if (GuiButton(btnRect, fs::path(fosFiles[i]).filename().string().c_str()))
+        {
+            selectedFileIndex = (int)i;
+
+            printf("load -> %s\n", fosFiles[i].c_str());
+            LoadScript(fosFiles[i].c_str());
+            //CurrentFile.Clear();
+            ////// Загружаем содержимое скрипта
+            //std::string scriptContent = LoadFileContent(fosFiles[i].c_str());
+            //CurrentFile.name = fs::path(fosFiles[i]).filename().string().c_str();
+            //// Парсим скрипт
+            //FOnlineScriptParser parser;
+            //if (parser.ParseScript(scriptContent, CurrentFile)) {
+            //    // Теперь scriptFile содержит узлы и соединения
+            //    TraceLog(LOG_INFO, "Parsed %d functions", CurrentFile.Nodes.size());
+
+            //}
+            //else {
+            //    TraceLog(LOG_ERROR, "Failed to parse script");
+            //}
+
+            //AutoArrangeNodes(CurrentFile, 100, 100, 500, 256);
+
+            //bool ok = LoadScriptFileByName(CurrentFile.name.c_str(), CurrentFile);
+            //TraceLog(ok ? LOG_INFO : LOG_WARNING, "LoadScriptFileByName('%s') -> %d", CurrentFile.name.c_str(), (int)ok);
+
+            //TraceLog(LOG_INFO, "Found %d Import", CurrentFile.Import.size());
+
+            // Загрузка скрипта тут
+        }
+    }
+
+    EndScissorMode();
+}
+
+
+
+void LoadScript(std::string file)
+{
+    printf("load -> %s\n", file.c_str());
+    CurrentFile.Clear();
+    //// Загружаем содержимое скрипта
+    std::string scriptContent = LoadFileContent(file.c_str());
+    CurrentFile.name = fs::path(file).filename().string().c_str();
+    // Парсим скрипт
+    FOnlineScriptParser parser;
+    if (parser.ParseScript(scriptContent, CurrentFile)) {
+        // Теперь scriptFile содержит узлы и соединения
+        TraceLog(LOG_INFO, "Parsed %d functions", CurrentFile.Nodes.size());
+
+    }
+    else {
+        TraceLog(LOG_ERROR, "Failed to parse script");
+    }
+
+    AutoArrangeNodes(CurrentFile, 100, 100, 500, 256);
+
+    bool ok = LoadScriptFileByName(CurrentFile.name.c_str(), CurrentFile);
+    TraceLog(ok ? LOG_INFO : LOG_WARNING, "LoadScriptFileByName('%s') -> %d", CurrentFile.name.c_str(), (int)ok);
+
+    TraceLog(LOG_INFO, "Found %d Import", CurrentFile.Import.size());
+}
+void FindCallingFiles(const std::string& nodeName)
+{
+    callingFiles.clear();
+    lastFind_nodeName = nodeName;
+
+    std::regex callRegex("\\b" + nodeName + "\\s*\\(");
+
+    size_t totalFiles = fosFiles.size();
+    for (size_t i = 0; i < totalFiles; ++i)
+    {
+        const auto& file = fosFiles[i];
+
+        std::ifstream f(file);
+        if (!f.is_open()) continue;
+
+        std::stringstream buffer;
+        buffer << f.rdbuf();
+        std::string content = buffer.str();
+
+        if (std::regex_search(content, callRegex))
+        {
+            // Для безопасности: блокируем доступ к callingFiles, если она общая и может читаться из другого потока
+            //std::lock_guard<std::mutex> lock(callingFilesMutex);
+            callingFiles.push_back(file);
+        }
+
+        // Обновляем прогресс
+        findProgress = (float)(i + 1) / (float)totalFiles;
+    }
+
+    selectedCallerIndex = -1;
+    showCallersWindow = true;
+
+    findProgress = 1.0f; // на всякий случай — закончили
+
+
+   
+}
+// Рисование окна с файлами, где вызывается функция
+void DrawCallingFilesWindow()
+{
+    if (isFindingCallingFiles) {
+        float barWidth = 300;
+        float barHeight = 20;
+        Rectangle barRec = { 50, 50, barWidth, barHeight };
+
+        DrawRectangleLinesEx(barRec, 2, DARKGRAY);
+        DrawRectangle(barRec.x, barRec.y, barWidth * findProgress.load(), barHeight, GREEN);
+        DrawText("Finding Calling Files...", barRec.x, barRec.y - 25, 20, BLACK);
+    }
+
+    if (!showCallersWindow) return;
+
+    const int winW = 400;
+    const int winH = 300;
+    Rectangle winBounds = { 100, 100, (float)winW, (float)winH };
+
+    GuiWindowBox(winBounds, "Files Calling This Node");
+
+    Rectangle scrollPanelBounds = { winBounds.x + 10, winBounds.y + 30, winBounds.width - 20, winBounds.height - 70 };
+    Rectangle contentBounds = { 0, 0, scrollPanelBounds.width - 20, callingFiles.size() * 30 };
+
+    GuiScrollPanel(scrollPanelBounds, NULL, contentBounds, &callFilesScroll, nullptr);
+
+    BeginScissorMode((int)scrollPanelBounds.x, (int)scrollPanelBounds.y, (int)scrollPanelBounds.width, (int)scrollPanelBounds.height);
+
+    for (size_t i = 0; i < callingFiles.size(); i++)
+    {
+        Rectangle btnRect = { scrollPanelBounds.x + 5, scrollPanelBounds.y + i * 30 + callFilesScroll.y, scrollPanelBounds.width - 20, 25 };
+
+        std::string filenameOnly = fs::path(callingFiles[i]).filename().string();
+
+        if (GuiButton(btnRect, filenameOnly.c_str()))
+        {
+            selectedCallerIndex = (int)i;
+            //printf("\nNew : %s  | curren %s\n", filenameOnly.c_str(), CurrentFile.name.c_str());
+            if (fs::path(callingFiles[i]).filename() != fs::path(CurrentFile.name).filename())
+                LoadScript(callingFiles[i]);
+
+
+            g_SelectedNode = -1;
+            if (!lastFind_nodeName.empty())
+            {
+                for (auto n : CurrentFile.Nodes)
+                {
+                    if (n->name == lastFind_nodeName)
+                    {
+                        graphOffset.x = (n->position.x * graphScale) - (GraphRect.width / 2.0f);
+                        graphOffset.y = (n->position.y * graphScale) - (GraphRect.height / 2.0f);
+                        g_SelectedNode = n->ID;
+                        //printf("lastFind_nodeName %s | ID : %i\n", lastFind_nodeName.c_str(), g_SelectedNode);
+                        break;
+                    }
+                }
+            }
+            showCallersWindow = false;
+        }
+    }
+
+    EndScissorMode();
+
+    Rectangle closeBtn = { winBounds.x + winBounds.width - 80, winBounds.y + winBounds.height - 30, 70, 25 };
+    if (GuiButton(closeBtn, "Close"))
+    {
+        showCallersWindow = false;
+    }
+    
+    
 }

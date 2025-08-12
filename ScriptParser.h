@@ -32,6 +32,9 @@ private:
     void CreateNodes(ScriptFile& scriptFile);
     void CreateConnections(ScriptFile& scriptFile);
 
+
+   
+
     // Обработка параметров и типов
     void ParseFunctionParameters(const std::string& paramsStr, std::vector<std::pair<std::string, EVarType>>& params);
     EVarType ParseVarType(const std::string& typeStr);

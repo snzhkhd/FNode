@@ -5,6 +5,11 @@
 #include <memory>
 #include "raylib.h"
 #include <functional>
+
+#include <fstream>
+#include <nlohmann/json.hpp>
+using json = nlohmann::json;
+
 enum class EVarType {
     Int,
     UInt,
@@ -17,6 +22,12 @@ enum class EVarType {
     ProtoItem,
     Item,
     ItemCl,
+    Enums,
+    GameVar,
+    Map,
+    Defines,
+    Colors,
+    EXEC    //16
 };
 
 struct SPort {
@@ -75,6 +86,17 @@ struct Imports : public sBase
     int from; //ID;
 };
 
+
+struct NodeTemplate {
+    std::string name;
+    bool isPure = false; // если true — без Exec портов
+    // порты задаём как (name, type, isInput)
+    std::vector<std::tuple<std::string, EVarType, bool>> ports;
+    // можно добавить метаданные/иконку/описание при необходимости
+};
+
+
+
 class ScriptFile 
 {
 public:
@@ -93,6 +115,16 @@ public:
 
     void Execute(); // Выполняет весь граф
 
+    void Clear()
+    {
+        ID = 0;
+        name.clear();
+
+        Nodes.clear();
+        connections.clear();
+        Variables.clear();
+        Import.clear();
+    }
 };
 
 
@@ -114,3 +146,31 @@ struct ContextMenuItem {
 
 
 
+// Структура для настроек
+struct Settings {
+    std::string scriptFolder;
+    float connectorHandleLength;
+    float baseConnectorThickness;
+    int windowWidth;
+    int windowHeight;
+
+    // Сериализация в json
+    json to_json() const {
+        return json{
+            {"scriptFolder", scriptFolder},
+            {"connectorHandleLength", connectorHandleLength},
+            {"baseConnectorThickness", baseConnectorThickness},
+            {"windowWidth", windowWidth},
+            {"windowHeight", windowHeight}
+        };
+    }
+
+    // Десериализация из json
+    void from_json(const json& j) {
+        if (j.contains("scriptFolder")) j.at("scriptFolder").get_to(scriptFolder);
+        if (j.contains("connectorHandleLength")) j.at("connectorHandleLength").get_to(connectorHandleLength);
+        if (j.contains("baseConnectorThickness")) j.at("baseConnectorThickness").get_to(baseConnectorThickness);
+        if (j.contains("windowWidth")) j.at("windowWidth").get_to(windowWidth);
+        if (j.contains("windowHeight")) j.at("windowHeight").get_to(windowHeight);
+    }
+};

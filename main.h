@@ -3,6 +3,9 @@
 #include <raylib.h>
 #define RAYGUI_IMPLEMENTATION
 #include "raygui.h"
+#include <queue>
+#include <limits>
+#include <map>
 #include <filesystem>
 #include "PluginAPI.h"
 #include "Node.h"
@@ -12,6 +15,9 @@
 
 #include "ScriptParser.h"
 
+#include <thread>
+#include <atomic>
+namespace fs = std::filesystem;
 // Состояние меню
 struct ContextMenu {
     bool open = false;
@@ -26,9 +32,14 @@ struct ContextMenu {
 
 void UpdateContextMenu();
 void DrawContextMenu();
+void AutoArrangeNodes(ScriptFile& scriptFile, float startX, float startY, float xSpacing, float ySpacing);
 // Открыть меню для ноды: устанавливаем позицию и targetNodeId, и наполняем items через BuildNodeContextMenu
 void OpenNodeContextMenu(int nodeId, Vector2 screenPos);
 void CloseContextMenu() { g_contextMenu.open = false; g_contextMenu.items.clear(); g_contextMenu.hoveredIndex = -1; }
+void UpdateAndDrawActionPalette(const Rectangle& graphArea);
+
+void ScanFosScripts(const std::string& folderPath);
+void DrawScriptList();
 
 struct ConnectionDrag {
     bool active = false;
@@ -56,7 +67,7 @@ void UpdateLayout(Rectangle* recs, int screenWidth, int screenHeight);
 void GraphUpdate(Rectangle graphArea);
 void GraphDraw(Rectangle graphArea);
 Vector2 SnapToGrid(Vector2 pos);
-
+static bool IsExecPort(const SPort& p);
 void DrawNode(const NodeBase& node);
 void NodeUpdate(NodeBase& node);
 static float Vector2DistanceSqrLine(const Vector2& p, const Vector2& a, const Vector2& b);
@@ -79,12 +90,184 @@ bool isCompiled = false;                     // Состояние компиляции
 bool isShowConsole = false;
 
 
+static std::vector<std::string> callingFiles;  // список файлов с вызовами текущей ноды
+static Vector2 callFilesScroll = { 0, 0 };
+static bool showCallersWindow = false;
+static int selectedCallerIndex = -1;
+
 // Drag state для нод
 static int g_draggingNodeId = -1;
 static Vector2 g_dragStartMouseWorld = { 0,0 };
 static Vector2 g_dragStartNodePos = { 0,0 };
 static int g_hoveredConnectionIndex = -1;
 static int g_SelectedNode = -1;
+
+
+static Vector2 WindowSize = { 1600, 900 };
+
+const Vector2 WindowMinSize = { 600, 400 };
+
+static float CONNECTOR_HANDLE_LENGTH = 150.0f;
+static float BASE_CONNECTOR_THICKNESS = 4.f;
+Settings g_settings;
+// Хранилище найденных скриптов
+static std::string ScriptFolder = "E:\\_work\\379\\sdk\\Server\\scripts";
+static std::vector<std::string> fosFiles;
+static int selectedFileIndex = -1;
+
+// Область скролла
+static Rectangle Browse_scrollPanelBounds = { 200, 100, 300, 300 }; // где рисуем панель
+static Rectangle Browse_contentBounds = { 0, 0, 280, 0 }; // изменяемая по высоте
+static Vector2 Browse_scroll = { 0, 0 };
+
+
+
+// Вспомогательные переменные для окна настроек
+static bool showSettingsWindow = false;
+static char folderInput[512] = {};
+static float inputWindowWidth = 0, inputWindowHeight = 0;
+static float inputConnectorHandleLength = 0, inputBaseConnectorThickness = 0;
+
+
+std::atomic<bool> isFindingCallingFiles = false;
+std::atomic<float> findProgress = 0.0f; // 0.0 - 1.0
+std::vector<std::string> foundCallingFiles; // результат поиска
+std::mutex foundFilesMutex; // для потокобезопасного доступа
+
+Rectangle GraphRect;
+static std::string lastFind_nodeName;
+
+void LoadScript(std::string file);
+// Функция поиска файлов, где вызывается nodeName
+void FindCallingFiles(const std::string& nodeName);
+void DrawCallingFilesWindow();
+
+// Сохраняем настройки в файл
+void SaveSettings(const std::string& filename) {
+    json j = g_settings.to_json();
+    std::ofstream file(filename);
+    if (file.is_open()) {
+        file << j.dump(4); // с отступами для удобства
+    }
+}
+
+// Загружаем настройки из файла
+bool LoadSettings(const std::string& filename) {
+    std::ifstream file(filename);
+    if (file.is_open()) {
+        json j;
+        file >> j;
+        g_settings.from_json(j);
+        return true;
+    }
+    return false;
+}
+
+static void DrawSettingsWindow()
+{
+    if (!showSettingsWindow) return;
+
+    // Задаём позицию и размер окна (можно настроить)
+    Rectangle winBounds = { 400, 200, 600, 600 };
+    DrawRectangle(winBounds.x, winBounds.y, winBounds.width, winBounds.height, WHITE);
+    GuiGroupBox(winBounds, "Settings");
+
+    // Отступы и позиции внутри окна
+    int marginX = 20;
+    int marginY = 30;
+    float lineHeight = 25;
+    float labelWidth = 140;
+    float inputWidth = 300;
+
+    float y = winBounds.y + marginY;
+
+    // ScriptFolder input
+    GuiLabel({ winBounds.x + marginX, y, labelWidth, lineHeight }, "Script Folder:");
+    GuiTextBox({ winBounds.x + marginX + labelWidth, y, inputWidth, lineHeight }, folderInput, sizeof(folderInput), true);
+    y += lineHeight + 10;
+
+    static int mainMonitor = GetCurrentMonitor();
+    static int monitorWidth = GetMonitorWidth(mainMonitor);
+    static int monitorHeight = GetMonitorHeight(mainMonitor);
+
+    int textHeight = 12; // размер шрифта
+    Rectangle sliderRect1{ winBounds.x + marginX + labelWidth, y, inputWidth / 2 - 10, lineHeight };
+    GuiSlider(sliderRect1, "Window Width", NULL, &inputWindowWidth, WindowMinSize.x, monitorWidth);
+    const char* valText1 = TextFormat("%i", (int)inputWindowWidth);
+    int textWidth1 = MeasureText(valText1, 12);
+    float textX1 = sliderRect1.x + sliderRect1.width / 2 - textWidth1 / 2;
+    float textY1 = sliderRect1.y + sliderRect1.height / 2 - textHeight / 2;
+    DrawText(valText1, (int)textX1, (int)textY1, 12, GRAY);
+
+
+    Rectangle sliderRect2 = { winBounds.x + marginX + labelWidth + inputWidth / 2 + labelWidth / 2 + 10, y, inputWidth / 2 - 10, lineHeight };
+    GuiSlider(sliderRect2, "Window Height", NULL, &inputWindowHeight, WindowMinSize.y, monitorHeight);
+    const char* valText2 = TextFormat("%i", (int)inputWindowHeight);
+    int textWidth2 = MeasureText(valText2, 12);
+    float textX2 = sliderRect2.x + sliderRect2.width / 2 - textWidth2 / 2;
+    float textY2 = sliderRect2.y + sliderRect2.height / 2 - textHeight / 2;
+    DrawText(valText2, (int)textX2, (int)textY2, 12, GRAY);
+    y += lineHeight + 20;
+
+    // CONNECTOR_HANDLE_LENGTH input
+    GuiSlider(Rectangle{ winBounds.x + marginX + labelWidth, y, inputWidth, lineHeight }, "Connector Length", NULL, &inputConnectorHandleLength, 1, 500);
+    DrawText(TextFormat("%.2f",inputConnectorHandleLength), winBounds.x + marginX + labelWidth + (inputWidth * 0.5), y + 8 , 12, GRAY);
+    /*GuiLabel({ winBounds.x + marginX, y, labelWidth, lineHeight }, "Connector Length:");
+    GuiValueBox({ winBounds.x + marginX + labelWidth, y, inputWidth, lineHeight }, "", &inputConnectorHandleLength, 10, 1000, true);*/
+    y += lineHeight + 20;
+
+    // BASE_CONNECTOR_THICKNESS input
+    GuiSlider(Rectangle{ winBounds.x + marginX + labelWidth, y, inputWidth, lineHeight }, "Connector Thickness:", NULL, &inputBaseConnectorThickness, 1, 10);
+    DrawText(TextFormat("%.2f", inputBaseConnectorThickness), winBounds.x + marginX + labelWidth + (inputWidth * 0.5), y + 8, 12, GRAY);
+    //GuiLabel({ winBounds.x + marginX, y, labelWidth, lineHeight }, "Connector Thickness:");
+    //GuiValueBox({ winBounds.x + marginX + labelWidth, y, inputWidth, lineHeight }, "", &inputBaseConnectorThickness, 1, 100, true);
+    y += lineHeight + 20;
+
+    // Кнопки внизу окна
+    float btnWidth = 100;
+    float btnHeight = 30;
+    int btnSpacing = 20;
+    float btnY = (winBounds.y + winBounds.height - marginY - btnHeight);
+
+    // Apply
+    if (GuiButton({ winBounds.x + marginX, btnY, btnWidth, btnHeight }, "Apply"))
+    {
+        // Применяем значения без закрытия окна
+        ScriptFolder = folderInput;
+        WindowSize.x = inputWindowWidth;
+        WindowSize.y = inputWindowHeight;
+        CONNECTOR_HANDLE_LENGTH = inputConnectorHandleLength;
+        BASE_CONNECTOR_THICKNESS = inputBaseConnectorThickness;
+    }
+
+    // Ok
+    if (GuiButton({ winBounds.x + marginX + btnWidth + btnSpacing, btnY, btnWidth, btnHeight }, "Ok"))
+    {
+        // Применяем и закрываем окно
+        ScriptFolder = folderInput;
+        WindowSize.x = inputWindowWidth;
+        WindowSize.y = inputWindowHeight;
+        CONNECTOR_HANDLE_LENGTH = inputConnectorHandleLength;
+        BASE_CONNECTOR_THICKNESS = inputBaseConnectorThickness;
+        showSettingsWindow = false;
+
+        g_settings.baseConnectorThickness = BASE_CONNECTOR_THICKNESS;
+        g_settings.connectorHandleLength = CONNECTOR_HANDLE_LENGTH;
+        g_settings.scriptFolder = ScriptFolder;
+        g_settings.windowWidth = WindowSize.x;
+        g_settings.windowHeight = WindowSize.y;
+        SaveSettings("config.json");
+    }
+
+    // Cancel
+    if (GuiButton({ winBounds.x + marginX + 2 * (btnWidth + btnSpacing), btnY, btnWidth, btnHeight }, "Cancel"))
+    {
+        // Закрываем окно без сохранения изменений
+        showSettingsWindow = false;
+    }
+}
+
+
 // Получение следующего ID ноды (простая реализация)
 static int GetNextNodeId(const ScriptFile& file) {
     int maxId = 0;
@@ -103,6 +286,9 @@ static Vector2 WorldToScreen(const Vector2& world) {
 static Rectangle CalculateNodeRect(const NodeBase& node)
 {
     int NodeSize = 128;
+
+    if (node.isPure)
+        NodeSize = 64;
     float scaledNode = NodeSize * graphScale;
     float minWidth = scaledNode * 2;
     float minHeight = scaledNode;
@@ -174,68 +360,123 @@ void DisconnectAllForPort(ScriptFile& file, int nodeId, int portId) {
         file.connections.end());
 }
 
+static bool ConnectionExists(const ScriptFile& file, int outNodeId, int outPortId, int inNodeId, int inPortId)
+{
+    for (const auto& c : file.connections) {
+        if (c.outputNodeId == outNodeId && c.outputPortID == outPortId &&
+            c.inputNodeId == inNodeId && c.inputPortID == inPortId) return true;
+    }
+    return false;
+}
 
 void TryFinishConnectionDrag(ScriptFile& scriptFile) {
     if (!g_connDrag.active) return;
     Vector2 mouse = GetMousePosition();
 
+    // Найдём исходную ноду/порт (откуда тянем)
+    NodeBase* srcNode = FindNodeById(scriptFile, g_connDrag.nodeId);
+    if (!srcNode) { CancelConnectionDrag(); return; }
+
+    SPort srcPort{};
+    bool foundSrc = false;
+    for (const auto& p : srcNode->ports) {
+        if (p.ID == g_connDrag.portId) { srcPort = p; foundSrc = true; break; }
+    }
+    if (!foundSrc) { CancelConnectionDrag(); return; }
+
+    // Ищем цель под мышью
     for (auto& nodePtr : scriptFile.Nodes) {
         NodeBase* node = nodePtr.get();
-        for (const auto& port : node->ports) {
-            Vector2 ppos = GetPortScreenPosition(*node, port.ID);
+        for (const auto& t : node->ports) {
+            Vector2 ppos = GetPortScreenPosition(*node, t.ID);
             float radius = 6.0f * graphScale;
             if (!CheckCollisionPointCircle(mouse, ppos, radius)) continue;
 
-            // Избегаем соединений same node same port
-            if (g_connDrag.nodeId == node->ID && g_connDrag.portId == port.ID) { CancelConnectionDrag(); return; }
-
-            NodeBase* srcNode = FindNodeById(scriptFile, g_connDrag.nodeId);
-            if (!srcNode) { CancelConnectionDrag(); return; }
-
-            // Узнаём исходный порт
-            SPort srcPort{};
-            bool foundSrc = false;
-            for (const auto& p : srcNode->ports) {
-                if (p.ID == g_connDrag.portId) { srcPort = p; foundSrc = true; break; }
-            }
-            if (!foundSrc) { CancelConnectionDrag(); return; }
-
-            // target port is 'port'
-            const SPort& t = port;
-
-            // Правило 1: exec соединения — только ExecOut -> ExecIn
-            bool srcIsExec = (srcPort.name == "ExecOut" || srcPort.name == "ExecIn");
-            bool tgtIsExec = (t.name == "ExecOut" || t.name == "ExecIn");
-            if (srcIsExec || tgtIsExec) {
-                // разрешаем только выход -> вход и имена должны быть ExecOut -> ExecIn
-                if (!srcPort.isInput && t.isInput && srcPort.name == "ExecOut" && t.name == "ExecIn") {
-                    ConnectPorts(scriptFile, srcNode->ID, srcPort.ID, node->ID, t.ID);
-                }
+            // избегаем соединения самого с собой (node+port)
+            if (g_connDrag.nodeId == node->ID && g_connDrag.portId == t.ID) {
                 CancelConnectionDrag();
                 return;
             }
 
-            // Правило 2: обычные порты — output -> input и типы совместимы
-            if (!srcPort.isInput && t.isInput) {
-                if (AreTypesCompatible(srcPort.type, t.type)) {
-                    ConnectPorts(scriptFile, srcNode->ID, srcPort.ID, node->ID, t.ID);
+            // запрещаем соединять порт с портом той же ноды (опционально можно разрешить)
+            if (srcNode->ID == node->ID) {
+                // если хочешь разрешить внутринодовые соединения - убери этот блок
+                CancelConnectionDrag();
+                return;
+            }
+
+            // target port is 't'
+            const SPort targetPort = t;
+
+            bool srcIsExec = IsExecPort(srcPort);
+            bool tgtIsExec = IsExecPort(targetPort);
+
+            bool allowed = false;
+            bool swapped = false;
+            int outNodeId = -1, outPortId = -1, inNodeId = -1, inPortId = -1;
+
+            // --- EXEC logic ---
+            if (srcIsExec || tgtIsExec) {
+                // оба должны быть EXEC
+                if (srcIsExec && tgtIsExec) {
+                    // стандарт: output -> input
+                    if (!srcPort.isInput && targetPort.isInput) {
+                        allowed = true;
+                        outNodeId = srcNode->ID; outPortId = srcPort.ID;
+                        inNodeId = node->ID;      inPortId = targetPort.ID;
+                    }
+                    // если начали drag с входа и кончаем на выходе — переворачиваем
+                    else if (srcPort.isInput && !targetPort.isInput) {
+                        allowed = true;
+                        // swap ends: источник становится целью
+                        outNodeId = node->ID;         outPortId = targetPort.ID;
+                        inNodeId = srcNode->ID;       inPortId = srcPort.ID;
+                    }
                 }
                 else {
-                    // можно показать всплывашку или звук ошибки
+                    // один из портов EXEC, другой нет — запрещаем
+                    allowed = false;
                 }
             }
-            else if (srcPort.isInput && !t.isInput) {
-                // если начали с входа и отпустили на выходе — переворачиваем
-                if (AreTypesCompatible(t.type, srcPort.type)) {
-                    ConnectPorts(scriptFile, node->ID, t.ID, srcNode->ID, srcPort.ID);
+            // --- value ports logic ---
+            else {
+                // output -> input
+                if (!srcPort.isInput && targetPort.isInput) {
+                    if (AreTypesCompatible(srcPort.type, targetPort.type)) {
+                        allowed = true;
+                        outNodeId = srcNode->ID; outPortId = srcPort.ID;
+                        inNodeId = node->ID;      inPortId = targetPort.ID;
+                    }
+                }
+                // started from input and dropped on output -> flip
+                else if (srcPort.isInput && !targetPort.isInput) {
+                    if (AreTypesCompatible(targetPort.type, srcPort.type)) {
+                        allowed = true;
+                        outNodeId = node->ID;    outPortId = targetPort.ID;
+                        inNodeId = srcNode->ID;  inPortId = srcPort.ID;
+                    }
                 }
             }
+
+            // Если разрешено — добавляем соединение (но проверим дубль)
+            if (allowed) {
+                if (!ConnectionExists(scriptFile, outNodeId, outPortId, inNodeId, inPortId)) {
+                    ConnectPorts(scriptFile, outNodeId, outPortId, inNodeId, inPortId);
+                }
+                else {
+                    // уже есть - можно проигнорировать или обновить
+                }
+            }
+            else {
+                // можно дать фидбек (звук/ошибка)
+            }
+
             CancelConnectionDrag();
             return;
         }
     }
 
-    // если ничего не найдено — отменяем drag
+    // если цель не найдена — отменяем drag
     CancelConnectionDrag();
 }
 
@@ -367,11 +608,21 @@ static bool IsNumericType(EVarType t) {
 }
 
 static bool IsExecPort(const SPort& p) {
-    return p.name == "ExecIn" || p.name == "ExecOut";
+    if (p.type == EVarType::EXEC) return true;
+
+    // fallback: если тип почему-то не выставлен, попробуем по имени
+    std::string lower = p.name;
+    std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+    if (lower.find("exec") != std::string::npos) return true;
+    if (lower == "true" || lower == "false") return true; // для Branch
+    // можно ещё сопоставить с "ExecIn"/"ExecOut" или с префиксом
+    return false;
 }
 
 static bool AreTypesCompatible(EVarType outType, EVarType inType) {
     if (outType == inType) return true;
+    if (outType == EVarType::EXEC || inType == EVarType::EXEC) return (outType == EVarType::EXEC && inType == EVarType::EXEC);
+
     // разрешаем присваивание чисел между собой (инт->флоат и т.п.)
     if (IsNumericType(outType) && IsNumericType(inType)) return true;
     // можно расширить правила: Item->ItemCl, Critter& -> Critter и т.д.
@@ -407,17 +658,17 @@ static Color MixColor(const Color& a, const Color& b) {
 // Мапа: EVarType -> hex string (на основе данных, которые дал)
 static Color ColorForVarType(EVarType t) {
     static const std::unordered_map<EVarType, std::string> mapHex = {
-        { EVarType::Int,     "#ffaaaa" },
+        { EVarType::Int,     "#00ff7b" },
         { EVarType::UInt,    "#aaffaa" },
-        { EVarType::UInt8,   "#aaaaff" },
-        { EVarType::Float,   "#ffffaa" },
-        { EVarType::Bool,    "#ffccff" },
-        { EVarType::String,  "#cccccc" },
-        { EVarType::Critter, "#ffaa88" },
-        { EVarType::CritterCl,"#88aaff"},
-        { EVarType::ProtoItem,"#88ffaa"},
-        { EVarType::Item,    "#ffaaff" },
-        { EVarType::ItemCl,  "#aaffff" }
+        { EVarType::UInt8,   "#256b62" },
+        { EVarType::Float,   "#0fff37" },
+        { EVarType::Bool,    "#ff0000" },
+        { EVarType::String,  "#e600ff" },
+        { EVarType::Critter, "#00c8ff" },
+        { EVarType::CritterCl,"#0d99bf"},
+        { EVarType::ProtoItem,"#7293d6"},
+        { EVarType::Item,    "#0551ad" },
+        { EVarType::ItemCl,  "#0073ff" }
     };
 
     auto it = mapHex.find(t);
