@@ -18,6 +18,7 @@ static std::string VarTypeToString(EVarType t) {
     switch (t) {
     case EVarType::Int: return "int";
     case EVarType::UInt: return "uint";
+    case EVarType::UInt16: return "uint16";
     case EVarType::UInt8: return "uint8";
     case EVarType::Float: return "float";
     case EVarType::Bool: return "bool";
@@ -33,6 +34,7 @@ static std::string VarTypeToString(EVarType t) {
 static EVarType StringToVarType(const std::string& s) {
     if (s == "int") return EVarType::Int;
     if (s == "uint") return EVarType::UInt;
+    if (s == "uint16") return EVarType::UInt16;
     if (s == "uint8") return EVarType::UInt8;
     if (s == "float") return EVarType::Float;
     if (s == "bool") return EVarType::Bool;

@@ -120,6 +120,8 @@ static Rectangle Browse_scrollPanelBounds = { 200, 100, 300, 300 }; // где рисуе
 static Rectangle Browse_contentBounds = { 0, 0, 280, 0 }; // изменяемая по высоте
 static Vector2 Browse_scroll = { 0, 0 };
 
+// где-то на уровне модуля
+static std::unordered_map<std::string, bool> g_categoryExpanded;
 
 
 // Вспомогательные переменные для окна настроек
@@ -660,6 +662,7 @@ static Color ColorForVarType(EVarType t) {
     static const std::unordered_map<EVarType, std::string> mapHex = {
         { EVarType::Int,     "#00ff7b" },
         { EVarType::UInt,    "#aaffaa" },
+        { EVarType::UInt16,    "#c8ffab" },
         { EVarType::UInt8,   "#256b62" },
         { EVarType::Float,   "#0fff37" },
         { EVarType::Bool,    "#ff0000" },
@@ -675,3 +678,35 @@ static Color ColorForVarType(EVarType t) {
     if (it != mapHex.end()) return HexToColor(it->second);
     return WHITE;
 }
+
+
+
+// Helper trim / split
+static inline std::string Trim(const std::string& s) {
+    size_t a = s.find_first_not_of(" \t\r\n");
+    if (a == std::string::npos) return "";
+    size_t b = s.find_last_not_of(" \t\r\n");
+    return s.substr(a, b - a + 1);
+}
+
+static inline std::vector<std::string> SplitCategoryPath(const std::string& path) {
+    std::vector<std::string> out;
+    std::string cur;
+    for (char c : path) {
+        if (c == '|') {
+            std::string t = Trim(cur);
+            if (!t.empty()) out.push_back(t);
+            cur.clear();
+        }
+        else cur.push_back(c);
+    }
+    std::string t = Trim(cur);
+    if (!t.empty()) out.push_back(t);
+    return out;
+}
+
+static std::unique_ptr<CatNode> BuildCategoryTree();
+static bool BuildVisibleListRec(CatNode* node, const std::string& queryLower, std::vector<VisibleEntry>& out, int depth);
+static bool BuildVisibleList_Final(CatNode* node, const std::string& queryLower, std::vector<VisibleEntry>& out, int depth);
+static std::unique_ptr<CatNode> BuildCategoryTreeFiltered(const std::string& queryLower);
+static void FillVisibleListFromTree(CatNode* node, std::vector<VisibleEntry>& out, int depth);

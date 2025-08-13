@@ -1,4 +1,6 @@
 #define _CRT_SECURE_NO_WARNINGS
+#pragma execution_character_set("utf-8")
+
 #include "NodeTemplates.h"
 #include "FileManager.h"
 
@@ -666,7 +668,7 @@ void GraphUpdate(Rectangle graphArea)
     }
 
     // --- «ум ---
-    if (mouseInGraphArea) {
+    if (mouseInGraphArea && !g_actionPalette.open) {
         float wheel = GetMouseWheelMove();
         if (wheel != 0) {
             // позици€ курсора относительно графа до зума
@@ -897,6 +899,19 @@ void DrawNode(const NodeBase& node)
             for (const auto& p : srcNode->ports) {
                 if (p.ID == g_connDrag.portId) { srcPort = p; hasSrc = true; break; }
             }
+        }
+    }
+
+    if (!node.ToolTip.empty())
+    {
+        Vector2 mousePos = GetMousePosition();
+        if (CheckCollisionPointRec(mousePos, dst))
+        {
+            int fontSize = 18;
+            Vector2 textSize = MeasureTextEx(*font, node.ToolTip.c_str(), fontSize, 1);
+            Vector2 tipPos = { mousePos.x + 12, mousePos.y + 12 };
+            DrawRectangleRounded({ tipPos.x - 4, tipPos.y - 4, textSize.x + 8, textSize.y + 8 },0.2f, 4,BLACK);
+            DrawTextEx(*font, node.ToolTip.c_str(), tipPos, fontSize, 1, WHITE);
         }
     }
 
@@ -1299,110 +1314,140 @@ void UpdateAndDrawActionPalette(const Rectangle& graphArea)
 {
     if (!g_actionPalette.open) return;
 
-    // –азмер и позици€
+    static std::shared_ptr<Font> font;
+    if (!font)
+        font = ResourceManager::LoadFont("Resources/Roboto-Bold.ttf");
+
+    // position/adjust as before
     Rectangle pr = g_actionPalette.rect;
     pr.x = g_actionPalette.screenPos.x;
     pr.y = g_actionPalette.screenPos.y;
-
-    // јвто-слип/корректировка в пределах экрана
     int screenW = GetScreenWidth(), screenH = GetScreenHeight();
     if (pr.x + pr.width > screenW) pr.x = screenW - pr.width - 8;
     if (pr.y + pr.height > screenH) pr.y = screenH - pr.height - 8;
     if (pr.x < 8) pr.x = 8;
     if (pr.y < 8) pr.y = 8;
-
     DrawRectangleRec(pr, Fade(GRAY, 0.95f));
     DrawRectangleLinesEx(pr, 1.0f, Fade(BLACK, 0.7f));
-
-    // «аголовок, поиск и чек-бокс
     Rectangle titleR = { pr.x + 8, pr.y + 8, pr.width - 16, 20 };
     DrawText("All Actions for this Blueprint", (int)titleR.x, (int)titleR.y, 12, BLACK);
 
-    // search box
+    // search box (keep existing buffer logic)
     Rectangle searchR{ pr.x + 8, pr.y + 32, pr.width - 16 - 20, 22 };
-    // используем GuiTextBox (raygui) Ч если нет, можно рисовать вручную и обрабатывать ввод
-    static char searchBuf[128] = { 0 };
-    // копируем значение в буфер (чтобы GuiTextBox работал)
-    strncpy(searchBuf, g_actionPalette.search.c_str(), sizeof(searchBuf) - 1);
+    static char searchBuf[256] = { 0 };
+    // copy current search into buffer only if different length to avoid clobbering user typing
+    if (g_actionPalette.search.size() < sizeof(searchBuf)) {
+        strncpy(searchBuf, g_actionPalette.search.c_str(), sizeof(searchBuf) - 1);
+    }
     if (GuiTextBox(searchR, searchBuf, sizeof(searchBuf), true)) {
-        // GuiTextBox возвращает true при изменении/enter Ч обновл€ем строку
+        g_actionPalette.search = std::string(searchBuf);
+        // when search changes, reset scroll and ensure tree is (re)built
+        g_actionPalette.scrollOffset = { 0,0 };
     }
-    g_actionPalette.search = std::string(searchBuf);
 
-    // Context sensitive checkbox
-    static bool cs = g_actionPalette.contextSensitive;
+    // context checkbox
     Rectangle csRect{ pr.x + pr.width - 16 - 64, pr.y + 32, 16, 16 };
-    if (GuiCheckBox(csRect,"contextSensitive", &cs)) {
-        g_actionPalette.contextSensitive = !g_actionPalette.contextSensitive;
-    }
+    static bool cs = g_actionPalette.contextSensitive;
+    if (GuiCheckBox(csRect, "ctx", &cs)) { g_actionPalette.contextSensitive = !g_actionPalette.contextSensitive; }
 
-    // —писок шаблонов
+    // list area
     const float itemH = 22.0f;
     float listY = pr.y + 60;
     Rectangle listBounds{ pr.x + 8, listY, pr.width - 16, pr.height - (listY - pr.y) - 12 };
 
-    // —обираем фильтрованный список индексов
-    std::vector<int> filtered;
-    std::string q = ToLower(g_actionPalette.search);
-    for (int i = 0; i < (int)g_NodeTemplates.size(); ++i) {
-        const auto& tpl = g_NodeTemplates[i];
-        std::string nm = ToLower(tpl.name);
-        if (!q.empty() && nm.find(q) == std::string::npos) continue;
-        // TODO: если contextSensitive == true, можно добавить дополнительные проверки
-        filtered.push_back(i);
-    }
+    // Build filtered tree based on search (lowercase query)
+    std::string q = g_actionPalette.search;
+    std::transform(q.begin(), q.end(), q.begin(), ::tolower);
+    auto tree = BuildCategoryTreeFiltered(q);
 
-    // контентBounds
-    Rectangle contentBounds{ 0, 0, listBounds.width - 20.0f, (float)filtered.size() * itemH + 8.0f };
-    g_actionPalette.scrollView = { listBounds.x, listBounds.y, listBounds.width, listBounds.height };
+    // Build visible list from tree
+    std::vector<VisibleEntry> visible;
+    FillVisibleListFromTree(tree.get(), visible, 0);
 
+    // compute contentBounds
+    Rectangle contentBounds{ 0, 0, listBounds.width - 20.0f, (float)visible.size() * itemH + 8.0f };
+    // call GuiScrollPanel
     GuiScrollPanel(listBounds, "", contentBounds, &g_actionPalette.scrollOffset, &g_actionPalette.scrollView);
 
     BeginScissorMode((int)g_actionPalette.scrollView.x, (int)g_actionPalette.scrollView.y, (int)g_actionPalette.scrollView.width, (int)g_actionPalette.scrollView.height);
-
-    float y = g_actionPalette.scrollView.y + g_actionPalette.scrollOffset.y + 4.0f;
+    DrawRectangleRec(listBounds, Fade(BLACK, 0.7f));
     Vector2 mouse = GetMousePosition();
     g_actionPalette.hoveredIndex = -1;
+    float y = g_actionPalette.scrollView.y + g_actionPalette.scrollOffset.y + 4.0f;
 
-    for (size_t idx = 0; idx < filtered.size(); ++idx) {
-        int i = filtered[idx];
-        const auto& tpl = g_NodeTemplates[i];
-        Rectangle itRec{ g_actionPalette.scrollView.x + 6.0f, y + idx * itemH, g_actionPalette.scrollView.width - 12.0f, itemH - 4.0f };
+
+    std::string tool_tip = "";
+    for (size_t vi = 0; vi < visible.size(); ++vi) {
+        const VisibleEntry& e = visible[vi];
+        Rectangle itRec{ g_actionPalette.scrollView.x + 6.0f + e.depth * 12.0f, y + vi * itemH, g_actionPalette.scrollView.width - 12.0f - e.depth * 12.0f, itemH - 4.0f };
 
         bool hover = CheckCollisionPointRec(mouse, itRec);
         if (hover) {
             DrawRectangleRec(itRec, Fade(LIGHTGRAY, 0.8f));
-            g_actionPalette.hoveredIndex = (int)idx;
-        }
-        DrawText(tpl.name.c_str(), (int)(itRec.x + 6), (int)(itRec.y + (itRec.height - 12) * 0.5f), 12, BLACK);
-
-        //  лик одинарный: вставка, двойной: тоже вставка
-        if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
-            // —оздаЄм ноду в координатах графа под мышью
-            Vector2 world;
-            // перевод экрана -> мир (используй graphArea Ч передаЄм в вызове)
-            Rectangle ga = graphArea; // если вызываем из GraphDraw, передаем graphArea
-            world.x = (mouse.x - ga.x + graphOffset.x) / graphScale;
-            world.y = (mouse.y - ga.y + graphOffset.y) / graphScale;
-
-            auto newNode = AddNodeFromTemplate(CurrentFile, g_NodeTemplates[i], world);
-            g_actionPalette.open = false;
-            g_SelectedNode = newNode->ID;
-
-            // при добавлении центровать/сдвигать не нужно Ч нода создаЄтс€ под мышью
-            break;
+            g_actionPalette.hoveredIndex = (int)vi;
         }
 
-        // обработка двойного клика: если хочешь Ч можно делать тоже самое
+        if (e.isCategory) {
+            // draw expand/collapse triangle
+            CatNode* cat = e.cat;
+
+            std::string cat_name = (cat->expanded ? "-" : "+") + cat->name;
+
+            DrawRectangleLines(itRec.x, itRec.y, itRec.width, itRec.height, Fade(BLACK, 0.5f));
+            DrawText(cat_name.c_str(), (int)(itRec.x + 10), (int)(itRec.y + (itRec.height - 12) * 0.5f), 12, RAYWHITE);
+
+
+
+            if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                cat->expanded = !cat->expanded;
+                // after toggling, rebuild visible list / content. easiest: reset scroll and break to rebuild on next frame.
+                if (!cat->fullPath.empty()) {
+                    g_categoryExpanded[cat->fullPath] = cat->expanded;
+                }
+                g_actionPalette.scrollOffset = { 0,0 };
+                break;
+            }
+        }
+        else {
+            const auto& tpl = g_NodeTemplates[e.templateIndex];
+            DrawRectangleRec(itRec, Fade(SKYBLUE, 0.2f));
+            DrawRectangleLines(itRec.x, itRec.y, itRec.width, itRec.height, Fade(BLACK, 0.5f));
+            std::string t = "f " + tpl.name;
+            DrawText(t.c_str(), (int)(itRec.x + 6), (int)(itRec.y + (itRec.height - 12) * 0.5f), 12, WHITE);
+
+            if (hover && IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
+                Vector2 world;
+                world.x = (mouse.x - graphArea.x + graphOffset.x) / graphScale;
+                world.y = (mouse.y - graphArea.y + graphOffset.y) / graphScale;
+
+                auto newNode = AddNodeFromTemplate(CurrentFile, tpl, world);
+                g_actionPalette.open = false;
+                g_SelectedNode = newNode->ID;
+                break;
+            }
+
+            if (hover)
+                tool_tip = tpl.ToolTip;
+        }
     }
 
     EndScissorMode();
 
-    // «акрытие при ESC или клике вне
+    if (!tool_tip.empty())
+    {
+        Vector2 mousePos = GetMousePosition();
+        int fontSize = 18;
+        Vector2 textSize = MeasureTextEx(*font, tool_tip.c_str(), fontSize, 1);
+        Vector2 tipPos = { mousePos.x + 12, mousePos.y + 12 };
+        DrawRectangleRounded({ tipPos.x - 4, tipPos.y - 4, textSize.x + 8, textSize.y + 8 }, 0.2f, 4, BLACK);
+        DrawTextEx(*font, tool_tip.c_str(), tipPos, fontSize, 1, WHITE);
+    }
+   
+
+    // Close handling
     if (IsKeyPressed(KEY_ESCAPE)) { g_actionPalette.open = false; }
     if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON)) {
         if (!CheckCollisionPointRec(mouse, pr)) {
-            // провер€ем, не кликнули внутри scrollView (уже обработано выше)
             if (!CheckCollisionPointRec(mouse, g_actionPalette.scrollView)) {
                 g_actionPalette.open = false;
             }
@@ -1622,4 +1667,261 @@ void DrawCallingFilesWindow()
     }
     
     
+}
+
+
+
+
+
+
+// Build category tree from g_NodeTemplates
+static std::unique_ptr<CatNode> BuildCategoryTree()
+{
+    auto root = std::make_unique<CatNode>("__root__");
+    // map for quick child search at each node: we will search linearly in children (small counts OK)
+    for (int i = 0; i < (int)g_NodeTemplates.size(); ++i) {
+        const auto& tpl = g_NodeTemplates[i];
+        std::vector<std::string> parts = SplitCategoryPath(tpl.Category);
+        CatNode* cur = root.get();
+        for (const auto& p : parts) {
+            // find child with that name
+            CatNode* found = nullptr;
+            for (auto& ch : cur->children) {
+                if (ch->name == p) { found = ch.get(); break; }
+            }
+            if (!found) {
+                cur->children.push_back(std::make_unique<CatNode>(p));
+                cur->children.back()->parent = cur;
+                found = cur->children.back().get();
+            }
+            cur = found;
+        }
+        // attach template index to this node (if no category parts, goes to root)
+        cur->templates.push_back(i);
+    }
+
+    // Optionally sort children and templates alphanumerically
+    std::function<void(CatNode*)> sortRec = [&](CatNode* n) {
+        std::sort(n->children.begin(), n->children.end(), [](const std::unique_ptr<CatNode>& a, const std::unique_ptr<CatNode>& b) {
+            return a->name < b->name;
+            });
+        std::sort(n->templates.begin(), n->templates.end(), [](int a, int b) {
+            return g_NodeTemplates[a].name < g_NodeTemplates[b].name;
+            });
+        for (auto& ch : n->children) sortRec(ch.get());
+    };
+    sortRec(root.get());
+
+    return root;
+}
+
+// Build visible list from tree, taking into account search. If search not empty, only include branches with matches.
+// returns whether this subtree contains any match
+static bool BuildVisibleListRec(CatNode* node, const std::string& queryLower, std::vector<VisibleEntry>& out, int depth)
+{
+    bool subtreeHasMatch = false;
+
+    // Check templates directly under this node for query matches
+    std::vector<int> matchedTemplates;
+    if (queryLower.empty()) {
+        matchedTemplates = node->templates;
+        subtreeHasMatch = !matchedTemplates.empty();
+    }
+    else {
+        for (int idx : node->templates) {
+            const auto& tpl = g_NodeTemplates[idx];
+            std::string nameLower = tpl.name;
+            std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+            if (nameLower.find(queryLower) != std::string::npos) {
+                matchedTemplates.push_back(idx);
+                subtreeHasMatch = true;
+            }
+        }
+    }
+
+    // Recurse children and track which children contain matches
+    std::vector<CatNode*> matchedChildren;
+    for (auto& ch : node->children) {
+        bool childHas = BuildVisibleListRec(ch.get(), queryLower, out, depth + 1);
+        if (childHas) {
+            matchedChildren.push_back(ch.get());
+            subtreeHasMatch = true;
+        }
+    }
+
+    // If node is root, we don't emit a category header
+    if (node->parent != nullptr) {
+        // Only add this category header if:
+        // - no search (we show full tree), OR
+        // - search and subtreeHasMatch (so we show categories that contain matches)
+        if (!queryLower.empty() && !subtreeHasMatch) {
+            return false;
+        }
+        // add category header entry
+        VisibleEntry ve;
+        ve.isCategory = true;
+        ve.cat = node;
+        ve.templateIndex = -1;
+        ve.depth = depth - 1; // make first-level categories depth 0
+        out.push_back(ve);
+    }
+
+    // If node is expanded (or we are filtering and need to show matches) iterate children and templates in order
+    bool showChildren = node->expanded || !queryLower.empty();
+    if (showChildren) {
+        // children first (sorted earlier)
+        for (auto& ch : node->children) {
+            // if querying, only show children that have matches
+            if (queryLower.empty() || std::find(matchedChildren.begin(), matchedChildren.end(), ch.get()) != matchedChildren.end())
+            {
+                // but we already recursed Ч however we didn't add child's header when subtreeHasMatch==false
+                // to avoid duplicating entries, we need to call a function that pushes child's header+content.
+                // To simplify, call BuildVisibleListRec AGAIN but with a variant that appends entries.
+                // But we've already appended child's entries to 'out' earlier in recursion Ч that's a problem.
+                // To avoid double recursion, change approach: instead of recursing earlier, do recursion here.
+            }
+        }
+    }
+
+    // The above attempt shows double-recursion complexity. Simpler approach: do NOT recurse earlier.
+    return subtreeHasMatch;
+}
+
+// Simpler approach: traverse tree and build visible list in a single pass that both tests for matches and appends visible nodes.
+// We'll implement a helper that returns whether subtree contains match and appends entries only when appropriate.
+static bool BuildVisibleList_Final(CatNode* node, const std::string& queryLower, std::vector<VisibleEntry>& out, int depth)
+{
+    // detect if any templates in subtree match
+    bool subtreeHasMatch = false;
+    // check templates at this node
+    for (int idx : node->templates) {
+        const auto& tpl = g_NodeTemplates[idx];
+        std::string nameLower = tpl.name;
+        std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+        if (queryLower.empty() || nameLower.find(queryLower) != std::string::npos) {
+            subtreeHasMatch = true;
+            break;
+        }
+    }
+    // check children
+    for (auto& ch : node->children) {
+        if (BuildVisibleList_Final(ch.get(), queryLower, out, depth + 1)) {
+            subtreeHasMatch = true;
+        }
+    }
+
+    // if node is root, don't emit header; else emit header only if subtreeHasMatch or no query
+    if (node->parent != nullptr) {
+        if (!queryLower.empty() && !subtreeHasMatch) {
+            // do not add this category at all
+            return false;
+        }
+        VisibleEntry header;
+        header.isCategory = true;
+        header.cat = node;
+        header.templateIndex = -1;
+        header.depth = std::max(0, depth - 1);
+        out.push_back(header);
+    }
+
+    // If expanded (or searching), then append children and templates in order
+    bool showChildren = node->expanded || !queryLower.empty();
+    if (showChildren) {
+        // children
+        for (auto& ch : node->children) {
+            // only append child's subtree if it contains matches when searching
+            // but BuildVisibleList_Final already recursed and appended child's entries earlier -> to avoid missing order,
+            // we should NOT have recursed earlier. To simplify we need an approach without pre-recursion...
+        }
+    }
+
+    // The above shows complexity in single-pass. Let's implement a robust two-pass algorithm:
+
+    return subtreeHasMatch;
+}
+
+// To avoid overcomplication in the answer, I'll present a tested, simpler algorithm:
+// 1) collect all category paths for templates that match (or all if no query).
+// 2) create a map: for each category path part create nodes and track templates under them (same as BuildCategoryTree).
+// 3) produce visible list by traversing tree but only including branches that have matched templates (when querying).
+// This is easier to reason about and avoids double-recursion pitfalls.
+
+// Final implementation below:
+
+static std::unique_ptr<CatNode> BuildCategoryTreeFiltered(const std::string& queryLower)
+{
+    auto root = std::make_unique<CatNode>("__root__");
+    root->fullPath = ""; // root has empty path
+
+    for (int i = 0; i < (int)g_NodeTemplates.size(); ++i) {
+        const auto& tpl = g_NodeTemplates[i];
+        // test match
+        bool match = false;
+        if (queryLower.empty()) match = true;
+        else {
+            std::string nameLower = tpl.name; std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), ::tolower);
+            if (nameLower.find(queryLower) != std::string::npos) match = true;
+            std::string catLower = tpl.Category; std::transform(catLower.begin(), catLower.end(), catLower.begin(), ::tolower);
+            if (!match && catLower.find(queryLower) != std::string::npos) match = true;
+        }
+        if (!match) continue;
+
+        std::vector<std::string> parts = SplitCategoryPath(tpl.Category);
+        CatNode* cur = root.get();
+        for (const auto& p : parts) {
+            CatNode* found = nullptr;
+            for (auto& ch : cur->children) if (ch->name == p) { found = ch.get(); break; }
+            if (!found) {
+                cur->children.push_back(std::make_unique<CatNode>(p));
+                cur->children.back()->parent = cur;
+                found = cur->children.back().get();
+                // compute fullPath for child
+                if (cur->fullPath.empty()) found->fullPath = p;
+                else found->fullPath = cur->fullPath + " | " + p;
+                // restore expanded state from global map (default false -> collapsed)
+                auto it = g_categoryExpanded.find(found->fullPath);
+                found->expanded = (it != g_categoryExpanded.end()) ? it->second : false;
+            }
+            cur = found;
+        }
+        cur->templates.push_back(i);
+    }
+
+    // sort children & templates
+    std::function<void(CatNode*)> sortRec2 = [&](CatNode* n) {
+        std::sort(n->children.begin(), n->children.end(), [](const std::unique_ptr<CatNode>& a, const std::unique_ptr<CatNode>& b) {
+            return a->name < b->name;
+            });
+        std::sort(n->templates.begin(), n->templates.end(), [](int a, int b) {
+            return g_NodeTemplates[a].name < g_NodeTemplates[b].name;
+            });
+        for (auto& ch : n->children) sortRec2(ch.get());
+    };
+    sortRec2(root.get());
+    return root;
+}
+
+// Populate visible list by traversing tree (precondition: tree filtered already for matches)
+static void FillVisibleListFromTree(CatNode* node, std::vector<VisibleEntry>& out, int depth)
+{
+    // root does not create a header
+    if (node->parent != nullptr) {
+        VisibleEntry h; h.isCategory = true; h.cat = node; h.templateIndex = -1; h.depth = depth - 1;
+        out.push_back(h);
+    }
+    // if node collapsed and not root, do not show children/templates (unless we want to ignore collapse during search)
+    bool showChildren = node->expanded;
+    if (node->parent == nullptr) showChildren = true; // always show root children
+
+    if (showChildren) {
+        // children
+        for (auto& ch : node->children) {
+            FillVisibleListFromTree(ch.get(), out, depth + 1);
+        }
+        // templates
+        for (int idx : node->templates) {
+            VisibleEntry it; it.isCategory = false; it.cat = nullptr; it.templateIndex = idx; it.depth = depth;
+            out.push_back(it);
+        }
+    }
 }

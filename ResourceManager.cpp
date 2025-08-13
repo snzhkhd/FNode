@@ -86,8 +86,30 @@ std::shared_ptr<Font> ResourceManager::LoadFont(const std::string& path)
         Utils::LogError("Font file not found: " + np);
         return nullptr;
     }
-    Font fnt = ::LoadFont(np.c_str());
-    // Check validity: fnt.texture.id? If 0, failed.
+
+    // Создаем массив кодпоинтов (латиница + кириллица)
+    std::vector<int> codepoints;
+
+    // ASCII 32..126
+    for (int c = 32; c <= 126; c++) codepoints.push_back(c);
+
+    // Кириллица А-Я
+    for (int c = 0x410; c <= 0x42F; c++) codepoints.push_back(c);
+    // Кириллица а-я
+    for (int c = 0x430; c <= 0x44F; c++) codepoints.push_back(c);
+    // Ё и ё
+    codepoints.push_back(0x401);
+    codepoints.push_back(0x451);
+
+    // Загружаем шрифт с нужными кодпоинтами
+    Font fnt = ::LoadFontEx(np.c_str(), 18, codepoints.data(), (int)codepoints.size());
+    if (fnt.texture.id == 0) {
+        Utils::LogError("Failed to load font with UTF-8: " + np);
+        return nullptr;
+    }
+
+    GenTextureMipmaps(&fnt.texture);
+
     auto deleter = [](Font* f) {
         Utils::LogInfo("Unloading font");
         ::UnloadFont(*f);
@@ -95,7 +117,7 @@ std::shared_ptr<Font> ResourceManager::LoadFont(const std::string& path)
     };
     std::shared_ptr<Font> sp(new Font(fnt), deleter);
     fonts_[np] = sp;
-    Utils::LogInfo("Loaded font: " + np);
+    Utils::LogInfo("Loaded font with UTF-8 support: " + np);
     return sp;
 }
 

@@ -13,6 +13,7 @@ using json = nlohmann::json;
 enum class EVarType {
     Int,
     UInt,
+    UInt16,
     UInt8,
     Float,
     Bool,
@@ -28,6 +29,14 @@ enum class EVarType {
     Defines,
     Colors,
     EXEC    //16
+};
+
+enum class RepType
+{
+    CLIENT  = 0,
+    SERVER  = 1,
+    MAP     = 2,
+    CONST   = 3
 };
 
 struct SPort {
@@ -76,6 +85,8 @@ struct NodeBase : public sBase
     std::vector<NodeBase> Function;
 
     std::string sourceFile;
+
+    std::string ToolTip = "";
 };
 
 struct Imports : public sBase
@@ -90,11 +101,59 @@ struct Imports : public sBase
 struct NodeTemplate {
     std::string name;
     bool isPure = false; // если true — без Exec портов
+
+    std::string Category = "";
+    int type = 0;
     // порты задаём как (name, type, isInput)
     std::vector<std::tuple<std::string, EVarType, bool>> ports;
     // можно добавить метаданные/иконку/описание при необходимости
+    std::string ToolTip = "";
+
+    NodeTemplate(const std::string& n, bool pure,
+        const std::vector<std::tuple<std::string, EVarType, bool>>& p)
+        : name(n), isPure(pure), ports(p) {}
+
+    NodeTemplate(const std::string& n, bool pure, const std::string& cat, int t,
+        const std::vector<std::tuple<std::string, EVarType, bool>>& p)
+        : name(n), isPure(pure), Category(cat), type(t), ports(p) {}
+
+    NodeTemplate(const std::string& n, bool pure, const std::vector<std::tuple<std::string, EVarType, bool>>& p, const std::string& tip)
+        : name(n), isPure(pure), ports(p), ToolTip(tip) {}
+
+    NodeTemplate(const std::string& n, bool pure, const std::string& cat, int t,
+        const std::vector<std::tuple<std::string, EVarType, bool>>& p, const std::string& tip)
+        : name(n), isPure(pure), Category(cat), type(t), ports(p), ToolTip(tip) {}
+
+    NodeTemplate(const std::string& n, bool pure, const std::string& cat,
+        const std::vector<std::tuple<std::string, EVarType, bool>>& p)
+        : name(n), isPure(pure), Category(cat), ports(p) {}
+    
+    NodeTemplate(const std::string& n, bool pure, const std::string& cat,
+        const std::vector<std::tuple<std::string, EVarType, bool>>& p,
+        const std::string& tip)
+        : name(n), isPure(pure), Category(cat), ports(p), ToolTip(tip) {}
+
+};
+// Node in category tree
+struct CatNode {
+    std::string name;
+    std::string fullPath; // <-- полный путь, например "Server | Math"
+    std::vector<int> templates; // indices
+    std::vector<std::unique_ptr<CatNode>> children;
+    bool expanded = false;     // default collapsed
+    CatNode* parent = nullptr;
+
+    CatNode(const std::string& n = "") : name(n) {}
 };
 
+
+// Visible entry for rendering
+struct VisibleEntry {
+    bool isCategory;
+    CatNode* cat;        // valid if isCategory
+    int templateIndex;   // valid if !isCategory
+    int depth;           // nesting depth (0 = root)
+};
 
 
 class ScriptFile 
