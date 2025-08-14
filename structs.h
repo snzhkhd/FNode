@@ -167,6 +167,7 @@ public:
 
     std::vector<Imports> Import;
 
+    ScriptFile() {}
 
     void AddNode(std::shared_ptr<NodeBase> node) { Nodes.push_back(node); }
     void RemoveNode(const std::string& nodeId);

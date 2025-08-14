@@ -5,7 +5,8 @@
 #include "FileManager.h"
 
 #include "raymath.h"
-ScriptFile CurrentFile;
+std::vector<ScriptFile> Pages;
+int CurrentPagesIndex = -1;
 
 char* CreateIconText(int iconCode, const char* text) {
     size_t length = snprintf(NULL, 0, "#%d# %s", iconCode, text); // Получаем длину строки
@@ -37,29 +38,11 @@ int main()
     SetWindowMinSize(600, 400);
 
     // Загружаем содержимое скрипта
-    std::string scriptContent = LoadFileContent("Resources/animation.fos");
-    CurrentFile.name = "animation";
-    // Парсим скрипт
-    FOnlineScriptParser parser;
-    if (parser.ParseScript(scriptContent, CurrentFile)) {
-        // Теперь scriptFile содержит узлы и соединения
-        TraceLog(LOG_INFO, "Parsed %d functions", CurrentFile.Nodes.size());
+    ScanFosScripts(ScriptFolder);
 
-    }
-    else {
-        TraceLog(LOG_ERROR, "Failed to parse script");
-    }
-
-    bool ok = LoadScriptFileByName(CurrentFile.name.c_str(), CurrentFile);
-    TraceLog(ok ? LOG_INFO : LOG_WARNING, "LoadScriptFileByName('%s') -> %d", CurrentFile.name.c_str(), (int)ok);
-    
-    TraceLog(LOG_INFO, "Found %d Import", CurrentFile.Import.size());
-
-    
-    //std::vector<int> cp;
-    //for (int c = 32; c < 127; ++c) cp.push_back(c);
-    //for (int c = 0x0400; c <= 0x0450; ++c) cp.push_back(c);
-    //ResourceManager::LoadFontEx("Resources/regular.ttf", 16, cp);
+    if(!fosFiles.empty())
+     LoadScript(fosFiles[0].c_str());
+    //LoadScript("E:/_work/379/sdk/Server/scripts/Achievements.fos");
 
     // FNode gui: controls initialization
     //----------------------------------------------------------------------------------
@@ -85,7 +68,7 @@ int main()
 
     const char* clear_fosb_btnText = CreateIconText(ICON_BIN, "Clear fosb");// BUTTON: clear_fosb_btn 
 
-    const char* graph_GroupBoxText = CreateIconText(ICON_LINK_BOXES, "Graph editor"); // GROUPBOX: graph_GroupBox
+    const char* graph_GroupBoxText = "";// CreateIconText(ICON_LINK_BOXES, "Graph editor"); // GROUPBOX: graph_GroupBox
 
     const char* Console_GroupBoxText = "Console";    // GROUPBOX: Console_GroupBox
 
@@ -167,10 +150,10 @@ int main()
     //----------------------------------------------------------------------------------
 
     Browse_scrollPanelBounds = layoutRecs[9];
-    ScanFosScripts(ScriptFolder);
+    
     SetTargetFPS(60);
     //--------------------------------------------------------------------------------------
-    AutoArrangeNodes(CurrentFile, 100, 100, 500, 256);
+    AutoArrangeNodes(Pages[CurrentPagesIndex], 100, 100, 500, 256);
     // Main game loop
     while (!WindowShouldClose())    // Detect window close button or ESC key
     {
@@ -183,14 +166,14 @@ int main()
 
         if (!showSettingsWindow && CheckCollisionPointRec(GetMousePosition(), GraphRect))
         {
-            for (auto& nptr : CurrentFile.Nodes) {
+            for (auto& nptr : Pages[CurrentPagesIndex].Nodes) {
                 NodeUpdate(*nptr);
             }
             UpdateHoveredConnectionIndex();
 
             // обработка удаления по правому клику:
             if (IsMouseButtonPressed(MOUSE_RIGHT_BUTTON) && g_hoveredConnectionIndex != -1) {
-                CurrentFile.connections.erase(CurrentFile.connections.begin() + g_hoveredConnectionIndex);
+                Pages[CurrentPagesIndex].connections.erase(Pages[CurrentPagesIndex].connections.begin() + g_hoveredConnectionIndex);
                 g_hoveredConnectionIndex = -1;
             }
             UpdateContextMenu();
@@ -224,7 +207,7 @@ int main()
         };
 
         // Область внутри панели (виртуальная "бумага")
-        Rectangle contentBounds = { 0, 0, panelBounds.width - 20, (float)CurrentFile.Nodes.size() * 24  }; // 24px на элемент
+        Rectangle contentBounds = { 0, 0, panelBounds.width - 20, (float)Pages[CurrentPagesIndex].Nodes.size() * 24  }; // 24px на элемент
         Rectangle viewArea = { 0 };
         GuiScrollPanel(panelBounds, "", contentBounds, &function_ScrollPanelScrollOffset, &viewArea);
         BeginScissorMode(
@@ -236,9 +219,9 @@ int main()
 
         // Рисуем список нод с учётом смещения скролла
         float y = panelBounds.y + function_ScrollPanelScrollOffset.y;
-        for (size_t i = 0; i < CurrentFile.Nodes.size(); i++)
+        for (size_t i = 0; i < Pages[CurrentPagesIndex].Nodes.size(); i++)
         {
-            const auto& node = *CurrentFile.Nodes[i];
+            const auto& node = *Pages[CurrentPagesIndex].Nodes[i];
             Rectangle btn = { panelBounds.x + 5, y + i * 24 +24, panelBounds.width - 30, 20 };
 
             if (CheckCollisionPointRec(GetMousePosition(), viewArea) && CheckCollisionPointRec(GetMousePosition(), btn) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
@@ -269,7 +252,7 @@ int main()
         GuiGroupBox(layoutRecs[10], tool_GroupBoxText);
 
       
-        if (GuiButton(layoutRecs[11], save_btnText)) SaveBtnImplementation(CurrentFile);// SaveBtn();
+        if (GuiButton(layoutRecs[11], save_btnText)) SaveBtnImplementation(Pages[CurrentPagesIndex]);// SaveBtn();
         if (GuiButton(layoutRecs[12], compile_btnText)) CompileBtn();
         if (GuiButton(layoutRecs[13], setting_btnText)) SettingBtn();
         if (GuiButton(layoutRecs[14], gvars_btnText)) GvarsBtn();
@@ -570,7 +553,7 @@ void UpdateHoveredConnectionIndex()
 {
     Vector2 mouse = GetMousePosition();
     // pick threshold можно подстроить: 6..12 в px
-    g_hoveredConnectionIndex = FindConnectionIndexAtPosition(CurrentFile, mouse, 8.0f);
+    g_hoveredConnectionIndex = FindConnectionIndexAtPosition(Pages[CurrentPagesIndex], mouse, 8.0f);
 }
 
 void UpdateLayout(Rectangle* recs, int screenWidth, int screenHeight) {
@@ -700,7 +683,7 @@ void GraphUpdate(Rectangle graphArea)
         Vector2 m = GetMousePosition();
 
         // если клик — по ноде, ничего не делаем (позже NodeUpdate обработает)
-        if (!IsPointOverAnyNode(CurrentFile, m, graphArea)) {
+        if (!IsPointOverAnyNode(Pages[CurrentPagesIndex], m, graphArea)) {
             float now = GetTime();
             float dt = now - g_actionPalette.lastClickTime;
             float dist = Vector2Distance(m, g_actionPalette.lastClickPos);
@@ -734,7 +717,51 @@ void GraphDraw(Rectangle graphArea)
     }
     if (!checkerTexture) return;
     
-    DrawText(TextFormat("%s",CurrentFile.name.c_str()), (int)graphArea.x + (graphArea.width * 0.5), (int)graphArea.y - 15, 12, BLACK);
+    float xPos = graphArea.x; // начальная позиция
+    for (int i = 0; i < Pages.size(); i++)
+    {
+        float tabWidth = MeasureText(Pages[i].name.c_str(), 12) + 25;
+        Rectangle tabRect = { xPos, graphArea.y - 20, tabWidth, 20 };
+
+        Color back_col = (i == CurrentPagesIndex) ? DARKBROWN : BLACK;
+        DrawRectangle(tabRect.x, tabRect.y, tabRect.width, tabRect.height, back_col);
+        DrawText(TextFormat(" %s", Pages[i].name.c_str()), tabRect.x, tabRect.y, 12, WHITE);
+        // Прямоугольник кнопки закрытия
+        Rectangle closeRect = { tabRect.x + tabRect.width - 18, tabRect.y, 20, 20 };
+
+        // --- Обработка закрытия ---
+        if (GuiButton(closeRect, "x"))
+        {
+            if (Pages.size() > 1)
+            {
+                Pages[i].Clear();
+                Pages.erase(Pages.begin() + i);
+                if (CurrentPagesIndex >= Pages.size())
+                    CurrentPagesIndex = Pages.size() - 1;
+                i--;
+            }
+            else
+            {
+                Pages[i].Clear();
+            }
+            continue;
+        }
+
+        // --- Обработка переключения вкладки ---
+        if (CheckCollisionPointRec(GetMousePosition(), tabRect) && !CheckCollisionPointRec(GetMousePosition(), closeRect) )          
+        {
+            if(IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+                CurrentPagesIndex = i;
+
+            DrawRectangleLines(tabRect.x, tabRect.y, tabRect.width, tabRect.height, YELLOW);
+        }
+
+
+
+
+        xPos += tabWidth + 5;
+    }
+    
 
     BeginScissorMode(
         (int)graphArea.x,
@@ -777,7 +804,7 @@ void GraphDraw(Rectangle graphArea)
 
     // если g_connDrag.active — рисуем временную линию от стартовой позиции к мыши
     if (g_connDrag.active) {
-        NodeBase* n = FindNodeById(CurrentFile, g_connDrag.nodeId);
+        NodeBase* n = FindNodeById(Pages[CurrentPagesIndex], g_connDrag.nodeId);
         if (n) 
         {
             Vector2  outputPos = GetPortScreenPosition(*n, g_connDrag.portId);
@@ -816,7 +843,7 @@ void GraphDraw(Rectangle graphArea)
 
 
     // 3. Рисуем узлы
-    for (auto& node : CurrentFile.Nodes) {
+    for (auto& node : Pages[CurrentPagesIndex].Nodes) {
         DrawNode(*node);
     }
 
@@ -848,15 +875,12 @@ void DrawNode(const NodeBase& node)
     static std::shared_ptr<Texture2D> PureNode_title_Texture;
     static std::shared_ptr<Texture2D> ExecTexture;
     //g_SelectedNode
-    static std::shared_ptr<Texture2D> NodeSelectTexture;
     if (!NodeTexture) {
         NodeTexture = ResourceManager::LoadTexture("Resources/RegularNode_body.png");
         PureNodeTexture = ResourceManager::LoadTexture("Resources/VarNode_body.png");
         PureNode_title_Texture = ResourceManager::LoadTexture("Resources/VarNode_gloss.png");
         Node_title_Texture = ResourceManager::LoadTexture("Resources/RegularNode_title_gloss.png");
         ExecTexture = ResourceManager::LoadTexture("Resources/ExecPin_Connected.png");
-
-        NodeSelectTexture = ResourceManager::LoadTexture("Resources/RegularNode_shadow_selected.png");
     }
     if (!NodeTexture) return;
 
@@ -894,7 +918,7 @@ void DrawNode(const NodeBase& node)
     SPort srcPort;
     bool hasSrc = false;
     if (g_connDrag.active) {
-        srcNode = FindNodeById(CurrentFile, g_connDrag.nodeId);
+        srcNode = FindNodeById(Pages[CurrentPagesIndex], g_connDrag.nodeId);
         if (srcNode) {
             for (const auto& p : srcNode->ports) {
                 if (p.ID == g_connDrag.portId) { srcPort = p; hasSrc = true; break; }
@@ -1028,7 +1052,7 @@ void NodeUpdate(NodeBase& node)
 
         // Ctrl+LMB on port => disconnect all connections on this port
         if (port.isHovered && IsMouseButtonPressed(MOUSE_LEFT_BUTTON) && IsKeyDown(KEY_LEFT_CONTROL)) {
-            DisconnectAllForPort(CurrentFile, node.ID, port.ID);
+            DisconnectAllForPort(Pages[CurrentPagesIndex], node.ID, port.ID);
         }
 
         // обычный LMB => старт drag-connection
@@ -1092,7 +1116,7 @@ void NodeUpdate(NodeBase& node)
 
     // Если во время drag-connection отпустили клавишу — пробуем завершить соединение
     if (g_connDrag.active && IsMouseButtonReleased(MOUSE_LEFT_BUTTON)) {
-        TryFinishConnectionDrag(CurrentFile);
+        TryFinishConnectionDrag(Pages[CurrentPagesIndex]);
     }
 
 
@@ -1115,14 +1139,14 @@ void DrawConection()
     // серый для exec
     Color execColor = Color{ 200, 200, 200, 255 };
 
-    for (size_t idx = 0; idx < CurrentFile.connections.size(); ++idx) {
-        const auto& conn = CurrentFile.connections[idx];
+    for (size_t idx = 0; idx < Pages[CurrentPagesIndex].connections.size(); ++idx) {
+        const auto& conn = Pages[CurrentPagesIndex].connections[idx];
 
         // Находим узлы по ID
         NodeBase* outputNode = nullptr;
         NodeBase* inputNode = nullptr;
 
-        for (const auto& n : CurrentFile.Nodes) {
+        for (const auto& n : Pages[CurrentPagesIndex].Nodes) {
             if (n->ID == conn.outputNodeId) outputNode = n.get();
             if (n->ID == conn.inputNodeId) inputNode = n.get();
         }
@@ -1249,7 +1273,7 @@ std::vector<ContextMenuItem> BuildNodeContextMenu(int nodeId) {
 
 
     out.emplace_back("Find all Calling", [nodeId]() {
-        NodeBase* n = FindNodeById(CurrentFile, nodeId);
+        NodeBase* n = FindNodeById(Pages[CurrentPagesIndex], nodeId);
         if (n && !isFindingCallingFiles) {
             isFindingCallingFiles = true;
             findProgress = 0.0f;
@@ -1273,7 +1297,7 @@ std::vector<ContextMenuItem> BuildNodeContextMenu(int nodeId) {
     // Удалить
     out.emplace_back("Delete Node", [nodeId]() {
         // вызываем вашу функцию удаления ноды
-        DeleteNode(CurrentFile, nodeId);
+        DeleteNode(Pages[CurrentPagesIndex], nodeId);
         });
 
     // Дублировать
@@ -1285,16 +1309,16 @@ std::vector<ContextMenuItem> BuildNodeContextMenu(int nodeId) {
 
     // Toggle pure (пример изменения свойства)
     out.emplace_back("Toggle Pure", [nodeId]() {
-        NodeBase* n = FindNodeById(CurrentFile, nodeId);
+        NodeBase* n = FindNodeById(Pages[CurrentPagesIndex], nodeId);
         if (n) n->isPure = !n->isPure;
         });
 
     out.emplace_back("Add Node Here", [nodeId]() {
         // добавляем новую ноду рядом с target
-        NodeBase* n = FindNodeById(CurrentFile, nodeId);
+        NodeBase* n = FindNodeById(Pages[CurrentPagesIndex], nodeId);
         if (n) {
             Vector2 newPos = { n->position.x + 2.0f, n->position.y + 2.0f };
-            auto nn = AddNode(CurrentFile, std::string("NewNode"), newPos, false);
+            auto nn = AddNode(Pages[CurrentPagesIndex], std::string("NewNode"), newPos, false);
             // можно заполнить порты и т.д.
         }
         });
@@ -1420,7 +1444,7 @@ void UpdateAndDrawActionPalette(const Rectangle& graphArea)
                 world.x = (mouse.x - graphArea.x + graphOffset.x) / graphScale;
                 world.y = (mouse.y - graphArea.y + graphOffset.y) / graphScale;
 
-                auto newNode = AddNodeFromTemplate(CurrentFile, tpl, world);
+                auto newNode = AddNodeFromTemplate(Pages[CurrentPagesIndex], tpl, world);
                 g_actionPalette.open = false;
                 g_SelectedNode = newNode->ID;
                 break;
@@ -1537,27 +1561,38 @@ void DrawScriptList()
 void LoadScript(std::string file)
 {
     printf("load -> %s\n", file.c_str());
-    CurrentFile.Clear();
-    //// Загружаем содержимое скрипта
+
+    ScriptFile f;
+
+    // Загружаем содержимое скрипта
     std::string scriptContent = LoadFileContent(file.c_str());
-    CurrentFile.name = fs::path(file).filename().string().c_str();
+    f.name = fs::path(file).filename().string();
+
     // Парсим скрипт
     FOnlineScriptParser parser;
-    if (parser.ParseScript(scriptContent, CurrentFile)) {
-        // Теперь scriptFile содержит узлы и соединения
-        TraceLog(LOG_INFO, "Parsed %d functions", CurrentFile.Nodes.size());
-
+    if (parser.ParseScript(scriptContent, f)) {
+        TraceLog(LOG_INFO, "Parsed %d functions", (int)f.Nodes.size());
     }
     else {
         TraceLog(LOG_ERROR, "Failed to parse script");
     }
 
-    AutoArrangeNodes(CurrentFile, 100, 100, 500, 256);
+    AutoArrangeNodes(f, 100, 100, 500, 256);
 
-    bool ok = LoadScriptFileByName(CurrentFile.name.c_str(), CurrentFile);
-    TraceLog(ok ? LOG_INFO : LOG_WARNING, "LoadScriptFileByName('%s') -> %d", CurrentFile.name.c_str(), (int)ok);
+    bool ok = LoadScriptFileByName(f.name.c_str(), f);
+    TraceLog(ok ? LOG_INFO : LOG_WARNING, "LoadScriptFileByName('%s') -> %d", f.name.c_str(), (int)ok);
+    TraceLog(LOG_INFO, "Found %d Import", (int)f.Import.size());
 
-    TraceLog(LOG_INFO, "Found %d Import", CurrentFile.Import.size());
+    // Проверка на пустую текущую вкладку
+    if (!Pages.empty() && Pages[CurrentPagesIndex].Nodes.empty() && Pages[CurrentPagesIndex].connections.empty())
+    {
+        Pages[CurrentPagesIndex] = f; // заменяем содержимое текущей вкладки
+    }
+    else
+    {
+        Pages.push_back(f); // создаём новую вкладку
+        CurrentPagesIndex = Pages.size() - 1;
+    }
 }
 void FindCallingFiles(const std::string& nodeName)
 {
@@ -1635,14 +1670,14 @@ void DrawCallingFilesWindow()
         {
             selectedCallerIndex = (int)i;
             //printf("\nNew : %s  | curren %s\n", filenameOnly.c_str(), CurrentFile.name.c_str());
-            if (fs::path(callingFiles[i]).filename() != fs::path(CurrentFile.name).filename())
+            if (fs::path(callingFiles[i]).filename() != fs::path(Pages[CurrentPagesIndex].name).filename())
                 LoadScript(callingFiles[i]);
 
 
             g_SelectedNode = -1;
             if (!lastFind_nodeName.empty())
             {
-                for (auto n : CurrentFile.Nodes)
+                for (auto n : Pages[CurrentPagesIndex].Nodes)
                 {
                     if (n->name == lastFind_nodeName)
                     {
