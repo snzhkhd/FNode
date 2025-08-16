@@ -1,0 +1,2455 @@
+[
+  {
+    "name": "Say types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "SAY_NORM",
+          "SAY_NORM_ON_HEAD",
+          "SAY_SHOUT",
+          "SAY_SHOUT_ON_HEAD",
+          "SAY_EMOTE",
+          "SAY_EMOTE_ON_HEAD",
+          "SAY_WHISP",
+          "SAY_WHISP_ON_HEAD",
+          "SAY_SOCIAL",
+          "SAY_RADIO",
+          "SAY_NETMSG",
+          "SAY_DIALOG",
+          "SAY_APPEND",
+          "SAY_ENCOUNTER_ANY",
+          "SAY_ENCOUNTER_RT",
+          "SAY_ENCOUNTER_TB",
+          "SAY_FIX_RESULT",
+          "SAY_DIALOGBOX_TEXT",
+          "SAY_DIALOGBOX_BUTTON",
+          "SAY_SAY_TITLE",
+          "SAY_SAY_TEXT",
+          "SAY_FLASH_WINDOW"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Msg nums",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "TEXTMSG_TEXT",
+          "TEXTMSG_DLG",
+          "TEXTMSG_ITEM",
+          "TEXTMSG_GAME",
+          "TEXTMSG_GM",
+          "TEXTMSG_COMBAT",
+          "TEXTMSG_QUEST",
+          "TEXTMSG_HOLO",
+          "TEXTMSG_CRAFT",
+          "TEXTMSG_INTERNAL",
+          "DLGSTR"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Critter conditions",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "COND_LIFE",
+          "COND_KNOCKOUT",
+          "COND_DEAD"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Gender",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "GENDER_MALE",
+          "GENDER_FEMALE",
+          "GENDER_IT"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Items accessory",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ACCESSORY_NONE",
+          "ACCESSORY_CRITTER",
+          "ACCESSORY_HEX",
+          "ACCESSORY_CONTAINER"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Internal types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ITEM_TYPE_NONE",
+          "ITEM_TYPE_ARMOR",
+          "ITEM_TYPE_DRUG",
+          "ITEM_TYPE_WEAPON",
+          "ITEM_TYPE_AMMO",
+          "ITEM_TYPE_MISC",
+          "ITEM_TYPE_KEY",
+          "ITEM_TYPE_CONTAINER",
+          "ITEM_TYPE_DOOR",
+          "ITEM_TYPE_GRID",
+          "ITEM_TYPE_GENERIC",
+          "ITEM_TYPE_WALL",
+          "ITEM_TYPE_CAR",
+          "ITEM_TYPE_MAGIC"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Item flags",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ITEM_HIDDEN",
+          "ITEM_FLAT",
+          "ITEM_NO_BLOCK",
+          "ITEM_SHOOT_THRU",
+          "ITEM_LIGHT_THRU",
+          "ITEM_MULTI_HEX",
+          "ITEM_WALL_TRANS_END",
+          "ITEM_TWO_HANDS",
+          "ITEM_BIG_GUN",
+          "ITEM_ALWAYS_VIEW",
+          "ITEM_HAS_TIMER",
+          "ITEM_BAD_ITEM",
+          "ITEM_NO_HIGHLIGHT",
+          "ITEM_SHOW_ANIM",
+          "ITEM_SHOW_ANIM_EXT",
+          "ITEM_LIGHT",
+          "ITEM_GECK",
+          "ITEM_TRAP",
+          "ITEM_NO_LIGHT_INFLUENCE",
+          "ITEM_NO_LOOT",
+          "ITEM_NO_STEAL",
+          "ITEM_GAG",
+          "ITEM_COLORIZE",
+          "ITEM_COLORIZE_INV",
+          "ITEM_CAN_USE_ON_SMTH",
+          "ITEM_CAN_LOOK",
+          "ITEM_CAN_TALK",
+          "ITEM_CAN_PICKUP",
+          "ITEM_CAN_USE",
+          "ITEM_HOLODISK",
+          "ITEM_RADIO",
+          "ITEM_CACHED"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Damage types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "DAMAGE_UNCALLED",
+          "DAMAGE_NORMAL",
+          "DAMAGE_LASER",
+          "DAMAGE_FIRE",
+          "DAMAGE_PLASMA",
+          "DAMAGE_ELECTR",
+          "DAMAGE_EMP",
+          "DAMAGE_EXPLODE"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Critter events",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CRITTER_EVENT_IDLE",
+          "CRITTER_EVENT_FINISH",
+          "CRITTER_EVENT_DEAD",
+          "CRITTER_EVENT_RESPAWN",
+          "CRITTER_EVENT_SHOW_CRITTER",
+          "CRITTER_EVENT_SHOW_CRITTER_1",
+          "CRITTER_EVENT_SHOW_CRITTER_2",
+          "CRITTER_EVENT_SHOW_CRITTER_3",
+          "CRITTER_EVENT_HIDE_CRITTER",
+          "CRITTER_EVENT_HIDE_CRITTER_1",
+          "CRITTER_EVENT_HIDE_CRITTER_2",
+          "CRITTER_EVENT_HIDE_CRITTER_3",
+          "CRITTER_EVENT_SHOW_ITEM_ON_MAP",
+          "CRITTER_EVENT_CHANGE_ITEM_ON_MAP",
+          "CRITTER_EVENT_HIDE_ITEM_ON_MAP",
+          "CRITTER_EVENT_ATTACK",
+          "CRITTER_EVENT_ATTACKED",
+          "CRITTER_EVENT_STEALING",
+          "CRITTER_EVENT_MESSAGE",
+          "CRITTER_EVENT_USE_ITEM",
+          "CRITTER_EVENT_USE_ITEM_ON_ME",
+          "CRITTER_EVENT_USE_SKILL",
+          "CRITTER_EVENT_USE_SKILL_ON_ME",
+          "CRITTER_EVENT_DROP_ITEM",
+          "CRITTER_EVENT_MOVE_ITEM",
+          "CRITTER_EVENT_KNOCKOUT",
+          "CRITTER_EVENT_SMTH_DEAD",
+          "CRITTER_EVENT_SMTH_STEALING",
+          "CRITTER_EVENT_SMTH_ATTACK",
+          "CRITTER_EVENT_SMTH_ATTACKED",
+          "CRITTER_EVENT_SMTH_USE_ITEM",
+          "CRITTER_EVENT_SMTH_USE_SKILL",
+          "CRITTER_EVENT_SMTH_DROP_ITEM",
+          "CRITTER_EVENT_SMTH_MOVE_ITEM",
+          "CRITTER_EVENT_SMTH_KNOCKOUT",
+          "CRITTER_EVENT_PLANE_BEGIN",
+          "CRITTER_EVENT_PLANE_END",
+          "CRITTER_EVENT_PLANE_RUN",
+          "CRITTER_EVENT_BARTER",
+          "CRITTER_EVENT_TALK",
+          "CRITTER_EVENT_GLOBAL_PROCESS",
+          "CRITTER_EVENT_GLOBAL_INVITE",
+          "CRITTER_EVENT_TURN_BASED_PROCESS",
+          "CRITTER_EVENT_SMTH_TURN_BASED_PROCESS",
+          "CRITTER_EVENT_MAX"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Plane return values",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "PLANE_RUN_GLOBAL",
+          "PLANE_KEEP",
+          "PLANE_DISCARD"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Map events",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "MAP_EVENT_FINISH",
+          "MAP_EVENT_LOOP_0",
+          "MAP_EVENT_LOOP_1",
+          "MAP_EVENT_LOOP_2",
+          "MAP_EVENT_LOOP_3",
+          "MAP_EVENT_LOOP_4",
+          "MAP_EVENT_IN_CRITTER",
+          "MAP_EVENT_OUT_CRITTER",
+          "MAP_EVENT_CRITTER_DEAD",
+          "MAP_EVENT_TURN_BASED_BEGIN",
+          "MAP_EVENT_TURN_BASED_END",
+          "MAP_EVENT_TURN_BASED_PROCESS",
+          "MAP_EVENT_MAX"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Location events",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "LOCATION_EVENT_FINISH",
+          "LOCATION_EVENT_ENTER",
+          "LOCATION_EVENT_MAX"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Item events",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ITEM_EVENT_FINISH",
+          "ITEM_EVENT_ATTACK",
+          "ITEM_EVENT_USE",
+          "ITEM_EVENT_USE_ON_ME",
+          "ITEM_EVENT_SKILL",
+          "ITEM_EVENT_DROP",
+          "ITEM_EVENT_MOVE",
+          "ITEM_EVENT_WALK",
+          "ITEM_EVENT_MAX"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Item perks",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "WEAPON_PERK_LONG_RANGE",
+          "WEAPON_PERK_ACCURATE",
+          "WEAPON_PERK_PENETRATE",
+          "WEAPON_PERK_KNOCKBACK",
+          "WEAPON_PERK_SCOPE_RANGE",
+          "WEAPON_PERK_FAST_RELOAD",
+          "WEAPON_PERK_NIGHT_SIGHT",
+          "WEAPON_PERK_FLAMEBOY",
+          "WEAPON_PERK_ENHANCED_KNOCKOUT",
+          "ARMOR_PERK_POWERED",
+          "ARMOR_PERK_COMBAT",
+          "ARMOR_PERK_ADVANCED_I",
+          "ARMOR_PERK_ADVANCED_II",
+          "ARMOR_PERK_CHARISMA",
+          "SLOT_PERK_MIRROR_SHADES",
+          "SLOT_PERK_COSMETIC_CASE",
+          "SLOT_PERK_MOTION_SENSOR",
+          "SLOT_PERK_STEALTH_BOY"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "In SendMessage",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "MESSAGE_TO_WHO_SEES_ME",
+          "MESSAGE_TO_I_SEE",
+          "MESSAGE_TO_ALL_ON_MAP"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Critter actions",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ACTION_MOVE",
+          "ACTION_RUN",
+          "ACTION_MOVE_ITEM",
+          "ACTION_MOVE_ITEM_SWAP",
+          "ACTION_USE_ITEM",
+          "ACTION_DROP_ITEM",
+          "ACTION_USE_WEAPON",
+          "ACTION_RELOAD_WEAPON",
+          "ACTION_USE_SKILL",
+          "ACTION_PICK_ITEM",
+          "ACTION_PICK_CRITTER",
+          "ACTION_OPERATE_CONTAINER",
+          "ACTION_BARTER",
+          "ACTION_DODGE",
+          "ACTION_DAMAGE",
+          "ACTION_DAMAGE_FORCE",
+          "ACTION_KNOCKOUT",
+          "ACTION_STANDUP",
+          "ACTION_FIDGET",
+          "ACTION_DEAD",
+          "ACTION_CONNECT",
+          "ACTION_DISCONNECT",
+          "ACTION_RESPAWN",
+          "ACTION_REFRESH"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Slots",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "SLOT_INV",
+          "SLOT_HAND1",
+          "SLOT_HAND2",
+          "SLOT_ARMOR",
+          "SLOT_GROUND"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Critter timeevents identifiers",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CTE_POISON",
+          "CTE_RADIATION",
+          "CTE_TRADER",
+          "CTE_OBSERVING",
+          "CTE_AUTOKILL"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Stats",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "STAT_BEGIN",
+          "STAT_END",
+          "STAT_COUNT",
+          "STAT_EXT_BEGIN",
+          "STAT_EXT_END",
+          "ST_STRENGTH",
+          "ST_PERCEPTION",
+          "ST_ENDURANCE",
+          "ST_CHARISMA",
+          "ST_INTELLECT",
+          "ST_AGILITY",
+          "ST_LUCK",
+          "ST_MAX_LIFE",
+          "ST_ACTION_POINTS",
+          "ST_ARMOR_CLASS",
+          "ST_MELEE_DAMAGE",
+          "ST_CARRY_WEIGHT",
+          "ST_SEQUENCE",
+          "ST_HEALING_RATE",
+          "ST_CRITICAL_CHANCE",
+          "ST_MAX_CRITICAL",
+          "ST_NORMAL_ABSORB",
+          "ST_LASER_ABSORB",
+          "ST_FIRE_ABSORB",
+          "ST_PLASMA_ABSORB",
+          "ST_ELECTRO_ABSORB",
+          "ST_EMP_ABSORB",
+          "ST_EXPLODE_ABSORB",
+          "ST_NORMAL_RESIST",
+          "ST_LASER_RESIST",
+          "ST_FIRE_RESIST",
+          "ST_PLASMA_RESIST",
+          "ST_ELECTRO_RESIST",
+          "ST_EMP_RESIST",
+          "ST_EXPLODE_RESIST",
+          "ST_RADIATION_RESISTANCE",
+          "ST_POISON_RESISTANCE",
+          "ST_STRENGTH_EXT",
+          "ST_PERCEPTION_EXT",
+          "ST_ENDURANCE_EXT",
+          "ST_CHARISMA_EXT",
+          "ST_INTELLECT_EXT",
+          "ST_AGILITY_EXT",
+          "ST_LUCK_EXT",
+          "ST_MAX_LIFE_EXT",
+          "ST_ACTION_POINTS_EXT",
+          "ST_ARMOR_CLASS_EXT",
+          "ST_MELEE_DAMAGE_EXT",
+          "ST_CARRY_WEIGHT_EXT",
+          "ST_SEQUENCE_EXT",
+          "ST_HEALING_RATE_EXT",
+          "ST_CRITICAL_CHANCE_EXT",
+          "ST_MAX_CRITICAL_EXT",
+          "ST_NORMAL_ABSORB_EXT",
+          "ST_LASER_ABSORB_EXT",
+          "ST_FIRE_ABSORB_EXT",
+          "ST_PLASMA_ABSORB_EXT",
+          "ST_ELECTRO_ABSORB_EXT",
+          "ST_EMP_ABSORB_EXT",
+          "ST_EXPLODE_ABSORB_EXT",
+          "ST_NORMAL_RESIST_EXT",
+          "ST_LASER_RESIST_EXT",
+          "ST_FIRE_RESIST_EXT",
+          "ST_PLASMA_RESIST_EXT",
+          "ST_ELECTRO_RESIST_EXT",
+          "ST_EMP_RESIST_EXT",
+          "ST_EXPLODE_RESIST_EXT",
+          "ST_RADIATION_RESISTANCE_EXT",
+          "ST_POISON_RESISTANCE_EXT",
+          "ST_TOXIC",
+          "ST_RADIOACTIVE",
+          "ST_KILL_EXPERIENCE",
+          "ST_BODY_TYPE",
+          "ST_LOCOMOTION_TYPE",
+          "ST_DAMAGE_TYPE",
+          "ST_AGE",
+          "ST_GENDER",
+          "ST_CURRENT_HP",
+          "ST_POISONING_LEVEL",
+          "ST_RADIATION_LEVEL",
+          "ST_CURRENT_AP",
+          "ST_EXPERIENCE",
+          "ST_LEVEL",
+          "ST_UNSPENT_SKILL_POINTS",
+          "ST_UNSPENT_PERKS",
+          "ST_KARMA",
+          "ST_FOLLOW_CRIT",
+          "ST_REPLICATION_MONEY",
+          "ST_REPLICATION_COUNT",
+          "ST_REPLICATION_TIME",
+          "ST_REPLICATION_COST",
+          "ST_TURN_BASED_AC",
+          "ST_MAX_MOVE_AP",
+          "ST_MOVE_AP",
+          "ST_NPC_ROLE",
+          "ST_VAR0",
+          "ST_VAR1",
+          "ST_VAR2",
+          "ST_VAR3",
+          "ST_VAR4",
+          "ST_VAR5",
+          "ST_VAR6",
+          "ST_VAR7",
+          "ST_VAR8",
+          "ST_VAR9",
+          "ST_PLAYER_KARMA",
+          "ST_BONUS_LOOK",
+          "ST_HANDS_ITEM_AND_MODE",
+          "ST_FREE_BARTER_PLAYER",
+          "ST_DIALOG_ID",
+          "ST_AI_ID",
+          "ST_TEAM_ID",
+          "ST_BAG_ID",
+          "ST_LAST_STEAL_CR_ID",
+          "ST_STEAL_COUNT",
+          "ST_LAST_WEAPON_ID",
+          "ST_LAST_WEAPON_USE",
+          "ST_BASE_CRTYPE",
+          "ST_DEAD_BLOCKER_ID",
+          "ST_CURRENT_ARMOR_PERK",
+          "ST_TALK_DISTANCE",
+          "ST_SCALE_FACTOR",
+          "ST_WALK_TIME",
+          "ST_RUN_TIME",
+          "ST_MAX_TALKERS",
+          "ST_NEXT_CRTYPE",
+          "ST_NEXT_REPLICATION_MAP",
+          "ST_NEXT_REPLICATION_ENTIRE"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Skills",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "SKILL_BEGIN",
+          "SKILL_END",
+          "SKILL_COUNT",
+          "MAX_SKILL_VAL",
+          "SK_SMALL_GUNS",
+          "SK_BIG_GUNS",
+          "SK_ENERGY_WEAPONS",
+          "SK_UNARMED",
+          "SK_MELEE_WEAPONS",
+          "SK_THROWING",
+          "SK_FIRST_AID",
+          "SK_DOCTOR",
+          "SK_SNEAK",
+          "SK_LOCKPICK",
+          "SK_STEAL",
+          "SK_TRAPS",
+          "SK_SCIENCE",
+          "SK_REPAIR",
+          "SK_SPEECH",
+          "SK_BARTER",
+          "SK_GAMBLING",
+          "SK_OUTDOORSMAN"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Tag skills",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "TAG_SKILL1",
+          "TAG_SKILL2",
+          "TAG_SKILL3",
+          "TAG_SKILL4"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Timeouts",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "TIMEOUT_BEGIN",
+          "TIMEOUT_END",
+          "TIMEOUT_COUNT",
+          "TO_SK_FIRST_AID",
+          "TO_SK_DOCTOR",
+          "TO_SK_REPAIR",
+          "TO_SK_SCIENCE",
+          "TO_SK_LOCKPICK",
+          "TO_SK_STEAL",
+          "TO_SK_OUTDOORSMAN",
+          "TO_BATTLE",
+          "TO_TRANSFER",
+          "TO_REMOVE_FROM_GAME",
+          "TO_REPLICATION",
+          "TO_KARMA_VOTING",
+          "TO_SNEAK",
+          "TO_HEALING",
+          "TO_STEALING",
+          "TO_AGGRESSOR"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Kills",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "KILL_BEGIN",
+          "KILL_END",
+          "KILL_COUNT"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Perks",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "PERK_BEGIN",
+          "PERK_END",
+          "PERK_COUNT",
+          "PE_BOOKWORM",
+          "PE_AWARENESS",
+          "PE_BONUS_HTH_ATTACKS",
+          "PE_BONUS_HTH_DAMAGE",
+          "PE_BONUS_MOVE",
+          "PE_BONUS_RANGED_DAMAGE",
+          "PE_BONUS_RATE_OF_FIRE",
+          "PE_EARLIER_SEQUENCE",
+          "PE_FASTER_HEALING",
+          "PE_MORE_CRITICALS",
+          "PE_NIGHT_VISION",
+          "PE_PRESENCE",
+          "PE_RAD_RESISTANCE",
+          "PE_TOUGHNESS",
+          "PE_STRONG_BACK",
+          "PE_SHARPSHOOTER",
+          "PE_SILENT_RUNNING",
+          "PE_SURVIVALIST",
+          "PE_MASTER_TRADER",
+          "PE_EDUCATED",
+          "PE_HEALER",
+          "PE_FORTUNE_FINDER",
+          "PE_BETTER_CRITICALS",
+          "PE_EMPATHY",
+          "PE_SLAYER",
+          "PE_SNIPER",
+          "PE_SILENT_DEATH",
+          "PE_ACTION_BOY",
+          "PE_MENTAL_BLOCK",
+          "PE_LIFEGIVER",
+          "PE_DODGER",
+          "PE_SNAKEATER",
+          "PE_MR_FIXIT",
+          "PE_MEDIC",
+          "PE_MASTER_THIEF",
+          "PE_SPEAKER",
+          "PE_HEAVE_HO",
+          "PE_FRIENDLY_FOE",
+          "PE_PICKPOCKET",
+          "PE_GHOST",
+          "PE_CULT_OF_PERSONALITY",
+          "PE_SCROUNGER",
+          "PE_EXPLORER",
+          "PE_FLOWER_CHILD",
+          "PE_PATHFINDER",
+          "PE_ANIMAL_FRIEND",
+          "PE_SCOUT",
+          "PE_MYSTERIOUS_STRANGER",
+          "PE_RANGER",
+          "PE_QUICK_POCKETS",
+          "PE_SMOOTH_TALKER",
+          "PE_SWIFT_LEARNER",
+          "PE_TAG",
+          "PE_MUTATE",
+          "PE_ADRENALINE_RUSH",
+          "PE_CAUTIOUS_NATURE",
+          "PE_COMPREHENSION",
+          "PE_DEMOLITION_EXPERT",
+          "PE_GAMBLER",
+          "PE_GAIN_STRENGTH",
+          "PE_GAIN_PERCEPTION",
+          "PE_GAIN_ENDURANCE",
+          "PE_GAIN_CHARISMA",
+          "PE_GAIN_INTELLIGENCE",
+          "PE_GAIN_AGILITY",
+          "PE_GAIN_LUCK",
+          "PE_HARMLESS",
+          "PE_HERE_AND_NOW",
+          "PE_HTH_EVADE",
+          "PE_KAMA_SUTRA_MASTER",
+          "PE_KARMA_BEACON",
+          "PE_LIGHT_STEP",
+          "PE_LIVING_ANATOMY",
+          "PE_MAGNETIC_PERSONALITY",
+          "PE_NEGOTIATOR",
+          "PE_PACK_RAT",
+          "PE_PYROMANIAC",
+          "PE_QUICK_RECOVERY",
+          "PE_SALESMAN",
+          "PE_STONEWALL",
+          "PE_THIEF",
+          "PE_WEAPON_HANDLING",
+          "PE_VAULT_CITY_TRAINING",
+          "PE_ALCOHOL_RAISED_HP",
+          "PE_ALCOHOL_RAISED_HP_II",
+          "PE_ALCOHOL_LOWERED_HP",
+          "PE_ALCOHOL_LOWERED_HP_II",
+          "PE_AUTODOC_RAISED_HP",
+          "PE_AUTODOC_RAISED_HP_II",
+          "PE_AUTODOC_LOWERED_HP",
+          "PE_AUTODOC_LOWERED_HP_II",
+          "PE_EXPERT_EXCREMENT",
+          "PE_JINXED_II",
+          "PE_TERMINATOR",
+          "PE_GECKO_SKINNING",
+          "PE_VAULT_CITY_INOCULATIONS",
+          "PE_DERMAL_IMPACT",
+          "PE_DERMAL_IMPACT_ENH",
+          "PE_PHOENIX_IMPLANTS",
+          "PE_PHOENIX_IMPLANTS_ENH",
+          "PE_NCR_PERCEPTION",
+          "PE_NCR_ENDURANCE",
+          "PE_NCR_BARTER",
+          "PE_NCR_REPAIR",
+          "PE_VAMPIRE_ACCURACY",
+          "PE_VAMPIRE_REGENERATION"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Addictions",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ADDICTION_BEGIN",
+          "ADDICTION_END",
+          "ADDICTION_COUNT",
+          "ADDICTION_NUKA_COLA",
+          "ADDICTION_BUFFOUT",
+          "ADDICTION_MENTATS",
+          "ADDICTION_PSYCHO",
+          "ADDICTION_RADAWAY",
+          "ADDICTION_JET",
+          "ADDICTION_TRAGIC"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "/ Karma perks",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "KARMA_BEGIN",
+          "KARMA_END",
+          "KARMA_COUNT",
+          "KARMA_BERSERKER",
+          "KARMA_CHAMPION",
+          "KARMA_CHILDKILLER",
+          "KARMA_SEXPERT",
+          "KARMA_PRIZEFIGHTER",
+          "KARMA_GIGOLO",
+          "KARMA_GRAVE_DIGGER",
+          "KARMA_MARRIED",
+          "KARMA_PORN_STAR",
+          "KARMA_SLAVER",
+          "KARMA_VIRGIN_WASTES",
+          "KARMA_MAN_SALVATORE",
+          "KARMA_MAN_BISHOP",
+          "KARMA_MAN_MORDINO",
+          "KARMA_MAN_WRIGHT",
+          "KARMA_SEPARATED",
+          "KARMA_PEDOBEAR",
+          "KARMA_VC_GUARDSMAN"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Damages",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "DAMAGE_BEGIN",
+          "DAMAGE_END",
+          "DAMAGE_COUNT",
+          "DAMAGE_POISONED",
+          "DAMAGE_RADIATED",
+          "DAMAGE_EYE",
+          "DAMAGE_RIGHT_ARM",
+          "DAMAGE_LEFT_ARM",
+          "DAMAGE_RIGHT_LEG",
+          "DAMAGE_LEFT_LEG"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Modes",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "MODE_BEGIN",
+          "MODE_END",
+          "MODE_COUNT",
+          "MODE_HIDE",
+          "MODE_NO_STEAL",
+          "MODE_NO_BARTER",
+          "MODE_NO_ENEMY_STACK",
+          "MODE_NO_PVP",
+          "MODE_END_COMBAT",
+          "MODE_DEFAULT_COMBAT",
+          "MODE_NO_HOME",
+          "MODE_GECK",
+          "MODE_NO_FAVORITE_ITEM",
+          "MODE_NO_ITEM_GARBAGER",
+          "MODE_DLG_SCRIPT_BARTER",
+          "MODE_UNLIMITED_AMMO",
+          "MODE_NO_DROP",
+          "MODE_NO_LOOSE_LIMBS",
+          "MODE_DEAD_AGES",
+          "MODE_NO_HEAL",
+          "MODE_INVULNERABLE",
+          "MODE_NO_FLATTEN",
+          "MODE_SPECIAL_DEAD",
+          "MODE_RANGE_HTH",
+          "MODE_NO_KNOCK",
+          "MODE_NO_LOOT",
+          "MODE_NO_SUPPLY",
+          "MODE_NO_KARMA_ON_KILL",
+          "MODE_BARTER_ONLY_CASH",
+          "MODE_NO_PUSH",
+          "MODE_NO_UNARMED",
+          "MODE_NO_AIM",
+          "MODE_NO_WALK",
+          "MODE_NO_RUN",
+          "MODE_NO_TALK"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Traits",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "TRAIT_BEGIN",
+          "TRAIT_END",
+          "TRAIT_COUNT",
+          "TRAIT_FAST_METABOLISM",
+          "TRAIT_BRUISER",
+          "TRAIT_SMALL_FRAME",
+          "TRAIT_ONE_HANDER",
+          "TRAIT_FINESSE",
+          "TRAIT_KAMIKAZE",
+          "TRAIT_HEAVY_HANDED",
+          "TRAIT_FAST_SHOT",
+          "TRAIT_BLOODY_MESS",
+          "TRAIT_JINXED",
+          "TRAIT_GOOD_NATURED",
+          "TRAIT_CHEM_RELIANT",
+          "TRAIT_CHEM_RESISTANT",
+          "TRAIT_SEX_APPEAL",
+          "TRAIT_SKILLED",
+          "TRAIT_NIGHT_PERSON"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Reputation",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "REPUTATION_BEGIN",
+          "REPUTATION_END",
+          "REPUTATION_COUNT",
+          "REPUTATION_DEN",
+          "REPUTATION_KLAMATH",
+          "REPUTATION_MODOC",
+          "REPUTATION_VAULT_CITY",
+          "REPUTATION_GECKO",
+          "REPUTATION_BROKEN_HILLS",
+          "REPUTATION_NEW_RENO",
+          "REPUTATION_SIERRA",
+          "REPUTATION_VAULT15",
+          "REPUTATION_NCR",
+          "REPUTATION_CATHEDRAL",
+          "REPUTATION_SAD",
+          "REPUTATION_REDDING",
+          "REPUTATION_SF",
+          "REPUTATION_NAVARRO",
+          "REPUTATION_ARROYO",
+          "REPUTATION_PRIMAL_TRIBE",
+          "REPUTATION_RANGERS",
+          "REPUTATION_VAULT13",
+          "REPUTATION_SACRAMENTO"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Mercenary settings",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "MERC_BEGIN",
+          "MERC_END",
+          "MERC_COUNT",
+          "MERC_MASTER_ID",
+          "MERC_ALWAYS_RUN",
+          "MERC_CANCEL_ON_ATTACK",
+          "MERC_LOSE_DIST",
+          "MERC_MASTER_DIST",
+          "MERC_TYPE",
+          "MERC_DEFEND_MASTER",
+          "MERC_ASSIST_MASTER",
+          "MERC_CANCEL_TIME",
+          "MERC_CANCEL_ON_GLOBAL",
+          "MERC_WAIT_FOR_MASTER"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "PARAMS_COUNT",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "PARAMS_COUNT"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Planes types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "AI_PLANE_MISC",
+          "AI_PLANE_ATTACK",
+          "AI_PLANE_WALK",
+          "AI_PLANE_PICK",
+          "AI_PLANE_PATROL",
+          "AI_PLANE_COURIER"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Planes deault priority",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "AI_PLANE_MISC_PRIORITY",
+          "AI_PLANE_ATTACK_PRIORITY",
+          "AI_PLANE_WALK_PRIORITY",
+          "AI_PLANE_PICK_PRIORITY",
+          "AI_PLANE_PATROL_PRIORITY",
+          "AI_PLANE_COURIER_PRIORITY"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Plane reasons Begin",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "REASON_GO_HOME",
+          "REASON_FOUND_IN_ENEMY_STACK",
+          "REASON_FROM_DIALOG",
+          "REASON_FROM_SCRIPT",
+          "REASON_RUN_AWAY"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Plane reasons End",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "REASON_SUCCESS",
+          "REASON_HEX_TOO_FAR",
+          "REASON_HEX_BUSY",
+          "REASON_HEX_BUSY_RING",
+          "REASON_DEADLOCK",
+          "REASON_TRACE_FAIL",
+          "REASON_POSITION_NOT_FOUND",
+          "REASON_FIND_PATH_ERROR",
+          "REASON_CANT_WALK",
+          "REASON_TARGET_DISAPPEARED",
+          "REASON_USE_ITEM_NOT_FOUND",
+          "REASON_GAG_CRITTER",
+          "REASON_GAG_ITEM",
+          "REASON_NO_UNARMED"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Plane reasons Run",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "REASON_ATTACK_TARGET",
+          "REASON_ATTACK_WEAPON",
+          "REASON_ATTACK_DISTANTION",
+          "REASON_ATTACK_USE_AIM"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Locker",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "LOCKER_ISOPEN",
+          "LOCKER_LOCKED",
+          "LOCKER_JAMMED",
+          "LOCKER_BROKEN",
+          "LOCKER_NOOPEN",
+          "LOCKER_ELECTRO"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Timer",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "TIMER_MIN_VALUE",
+          "TIMER_MAX_VALUE"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Timeouts",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "FIRST_AID_TIMEOUT",
+          "DOCTOR_TIMEOUT",
+          "REPAIR_TIMEOUT",
+          "SCIENCE_TIMEOUT",
+          "LOCKPICK_TIMEOUT",
+          "STEAL_TIMEOUT",
+          "TRANSFER_TIMEOUT",
+          "BATTLE_TIMEOUT",
+          "TRAPS_TIMEOUT",
+          "SNEAK_TIMEOUT",
+          "HEALING_TIMEOUT",
+          "IS_TURN_BASED_TIMEOUT",
+          "MAXIMUM_TIMEOUT"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Transfer types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "TRANSFER_CLOSE",
+          "TRANSFER_HEX_CONT_UP",
+          "TRANSFER_HEX_CONT_DOWN",
+          "TRANSFER_SELF_CONT",
+          "TRANSFER_CRIT_LOOT",
+          "TRANSFER_CRIT_STEAL",
+          "TRANSFER_CRIT_BARTER",
+          "TRANSFER_FAR_CONT",
+          "TRANSFER_FAR_CRIT"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Scores",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "SCORE_EVIL_OF_HOUR",
+          "SCORE_HERO_OF_HOUR",
+          "SCORE_KARMA_ON_HOUR",
+          "SCORE_SPEAKER",
+          "SCORE_TRADER",
+          "SCORE_ZOMBY",
+          "SCORE_PATY",
+          "SCORE_MANIAC",
+          "SCORE_SCAUT",
+          "SCORE_DOCTOR",
+          "SCORE_SHOOTER",
+          "SCORE_MELEE",
+          "SCORE_UNARMED",
+          "SCORE_THIEF",
+          "SCORE_DRIVER",
+          "SCORE_KILLER",
+          "SCORE_SNIPER",
+          "SCORE_ADVENTURER",
+          "SCORE_CRACKER",
+          "SCORE_UNARMED_DAMAGE",
+          "SCORE_RITCH",
+          "SCORE_CHOSEN_ONE",
+          "SCORE_SIERRA_CUR",
+          "SCORE_MARIPOSA_CUR",
+          "SCORE_CATHEDRAL_CUR",
+          "SCORE_SIERRA_BEST",
+          "SCORE_MARIPOSA_BEST",
+          "SCORE_CATHEDRAL_BEST",
+          "SCORE_SIERRA_ORG",
+          "SCORE_MARIPOSA_ORG",
+          "SCORE_CATHEDRAL_ORG",
+          "SCORE_BASE_BEST_ORG",
+          "SCORES_MAX"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Car flags",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CAR_BIO_ENGINE",
+          "CAR_NO_LOCKPICK"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Body types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "BT_MEN",
+          "BT_WOMEN",
+          "BT_CHILDREN",
+          "BT_SUPER_MUTANT",
+          "BT_GHOUL",
+          "BT_BRAHMIN",
+          "BT_RADSCORPION",
+          "BT_RAT",
+          "BT_FLOATER",
+          "BT_CENTAUR",
+          "BT_ROBOT",
+          "BT_DOG",
+          "BT_MANTI",
+          "BT_DEADCLAW",
+          "BT_PLANT",
+          "BT_GECKO",
+          "BT_ALIEN",
+          "BT_GIANT_ANT",
+          "BT_BIG_BAD_BOSS",
+          "BT_GIANT_BEETLE",
+          "BT_GIANT_WASP",
+          "MAX_BODY_TYPES"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Locomotion types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "LOCOMOTION_BIPED",
+          "LOCOMOTION_QUADRUPED",
+          "LOCOMOTION_ROBOTIC",
+          "LOCOMOTION_FLY"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Other",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "FLUSH_SCREEN_DEFAULT"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Dilalog functions",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "IS_DIALOG_END",
+          "IS_DIALOG_GENERATED",
+          "IS_DIALOG_SAY_MODE"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Time",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "IS_MORNING",
+          "IS_AFTERNOON",
+          "IS_NIGHT"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Item deterioration info",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "MAX_DETERIORATION",
+          "MAX_BROKENS"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Broken Information",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "BI_LOWBROKEN",
+          "BI_NORMBROKEN",
+          "BI_HIGHBROKEN",
+          "BI_NOTRESC",
+          "BI_BROKEN",
+          "BI_SERVICE",
+          "BI_SERVICE_EXT",
+          "BI_ETERNAL"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Combat modes",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "COMBAT_MODE_ANY",
+          "COMBAT_MODE_REAL_TIME",
+          "COMBAT_MODE_TURN_BASED"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Show screen modes",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "SCREEN_CLOSE",
+          "SCREEN_TIMER",
+          "SCREEN_DIALOGBOX",
+          "SCREEN_SKILLBOX",
+          "SCREEN_BAG",
+          "SCREEN_SAY",
+          "SCREEN_ELEVATOR",
+          "SCREEN_INVENTORY",
+          "SCREEN_CHARACTER",
+          "SCREEN_FIXBOY",
+          "SCREEN_PIPBOY",
+          "SCREEN_MINIMAP"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Global map fog",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "FOG_FULL",
+          "FOG_HALF",
+          "FOG_HALF_EX",
+          "FOG_NONE"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Critter extra flags",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CRITTER_PLAYER",
+          "CRITTER_NPC",
+          "CRITTER_DISCONNECT",
+          "CRITTER_CHOSEN",
+          "CRITTER_RULEGROUP"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Hit locations",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "HIT_LOCATION_NONE",
+          "HIT_LOCATION_HEAD",
+          "HIT_LOCATION_LEFT_ARM",
+          "HIT_LOCATION_RIGHT_ARM",
+          "HIT_LOCATION_TORSO",
+          "HIT_LOCATION_RIGHT_LEG",
+          "HIT_LOCATION_LEFT_LEG",
+          "HIT_LOCATION_EYES",
+          "HIT_LOCATION_GROIN",
+          "HIT_LOCATION_UNCALLED"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Sound types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "SOUND_WEAPON",
+          "SOUND_WEAPON_USE",
+          "SOUND_WEAPON_FLY",
+          "SOUND_WEAPON_MISS",
+          "SOUND_WEAPON_EMPTY",
+          "SOUND_WEAPON_RELOAD",
+          "SOUND_DOOR",
+          "SOUND_DOOR_OPEN",
+          "SOUND_DOOR_LOCK",
+          "SOUND_DOOR_CLOSE",
+          "SOUND_DOOR_NOT_OPEN"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Critter find types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "FIND_LIFE",
+          "FIND_KO",
+          "FIND_DEAD",
+          "FIND_LIFE_AND_KO",
+          "FIND_LIFE_AND_DEAD",
+          "FIND_KO_AND_DEAD",
+          "FIND_ALL",
+          "FIND_ONLY_PLAYERS",
+          "FIND_ONLY_NPC"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Elevators",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ELEVATOR_X",
+          "ELEVATOR_BOS_1234",
+          "ELEVATOR_BOS_01",
+          "ELEVATOR_MASTER_123",
+          "ELEVATOR_MASTER_34",
+          "ELEVATOR_MILITARY_123",
+          "ELEVATOR_MILITARY_34",
+          "ELEVATOR_MILITARY_346",
+          "ELEVATOR_MILITARY_456",
+          "ELEVATOR_VAULT_123"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Dialog links",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "DIALOG_END",
+          "DIALOG_BACK",
+          "DIALOG_BARTER",
+          "DIALOG_ATTACK"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Fix boy function call states",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "FIXBOY_LIST",
+          "FIXBOY_BUTTON",
+          "FIXBOY_CRAFT"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Fix boy craft results",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "FIXBOY_ALLOW_CRAFT",
+          "FIXBOY_CHECK_TIMEOUT",
+          "FIXBOY_SET_TIMEOUT",
+          "FIXBOY_CHECK_PARAMS",
+          "FIXBOY_CHECK_MATERIALS",
+          "FIXBOY_CHECK_TOOLS",
+          "FIXBOY_SUB_MATERIALS",
+          "FIXBOY_ADD_CRAFT_ITEMS",
+          "FIXBOY_ADD_EXPERIENCE",
+          "FIXBOY_SEND_SUCC_MESSAGE",
+          "FIXBOY_SEND_FAIL_MESSAGE",
+          "FIXBOY_DEFAULT"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Access levels",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ACCESS_CLIENT",
+          "ACCESS_TESTER",
+          "ACCESS_MODER",
+          "ACCESS_ADMIN"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Special skill values",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "SKILL_PICK_ON_GROUND",
+          "SKILL_PUT_CONT",
+          "SKILL_TAKE_CONT",
+          "SKILL_TAKE_ALL_CONT",
+          "SKILL_LOOT_CRITTER",
+          "SKILL_PUSH_CRITTER",
+          "SKILL_TALK"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Look checks",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "LOOK_CHECK_DIR",
+          "LOOK_CHECK_SNEAK_DIR",
+          "LOOK_CHECK_SNEAK_WEIGHT",
+          "LOOK_CHECK_TRACE",
+          "LOOK_CHECK_SCRIPT",
+          "LOOK_CHECK_ITEM_SCRIPT"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Critter base types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CRTYPE_DEFAULT_M",
+          "CRTYPE_DEFAULT_F",
+          "CRTYPE_NONE",
+          "CRTYPE_DW_JUMPSUIT_M",
+          "CRTYPE_DW_JUMPSUIT_F",
+          "CRTYPE_DW_LEATHER_JACKET_F",
+          "CRTYPE_DW_LEATHER_ARMOR_M",
+          "CRTYPE_DW_LEATHER_JACKET_M",
+          "CRTYPE_DW_METAL_ARMOR_M",
+          "CRTYPE_DW_TRIBAL_F",
+          "CRTYPE_DW_TRIBAL_M",
+          "CRTYPE_VAULT_M",
+          "CRTYPE_VAULT_F",
+          "CRTYPE_ROBOT",
+          "CRTYPE_LHD_JUMPSUIT",
+          "CRTYPE_LHD_LEATHER_ARMOR",
+          "CRTYPE_LHD_LEATHER_JACKET",
+          "CRTYPE_LHD_METAL_ARMOR",
+          "CRTYPE_LHD_TRIBAL",
+          "CRTYPE_RAT",
+          "CRTYPE_MOLESKIN_RAT_BIG",
+          "CRTYPE_VAULT_BOY",
+          "CRTYPE_3D_MALE_NORMAL",
+          "CRTYPE_3D_MALE_WIRY",
+          "CRTYPE_3D_MALE_STRONG",
+          "CRTYPE_3D_MALE_FAT",
+          "CRTYPE_3D_MALE_SKELETON",
+          "CRTYPE_3D_FEMALE_NORMAL",
+          "CRTYPE_3D_FEMALE_WIRY",
+          "CRTYPE_3D_FEMALE_STRONG",
+          "CRTYPE_3D_FEMALE_FAT",
+          "CRTYPE_3D_FEMALE_SKELETON",
+          "CRTYPE_3D_ANT",
+          "CRTYPE_3D_ANT_QUEEN",
+          "CRTYPE_3D_BAT",
+          "CRTYPE_3D_BEETLE",
+          "CRTYPE_3D_CENTIPEDE",
+          "CRTYPE_3D_COUGAR",
+          "CRTYPE_3D_COW",
+          "CRTYPE_3D_DEATHCLAW",
+          "CRTYPE_3D_DESERT_STALKER",
+          "CRTYPE_3D_DOG",
+          "CRTYPE_3D_GILA",
+          "CRTYPE_3D_MANTRAP",
+          "CRTYPE_3D_RAD_TOAD",
+          "CRTYPE_3D_RAT",
+          "CRTYPE_3D_THORN_SLINGER",
+          "CRTYPE_3D_WASP_GIANT",
+          "CRTYPE_3D_WEEDLING",
+          "CRTYPE_TACTICS_RHUMANOID",
+          "CRTYPE_ARCANUM_GEN_CR_BEGIN",
+          "CRTYPE_ARCANUM_GEN_CR_END"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Global map events",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "GLOBAL_PROCESS_MOVE",
+          "GLOBAL_PROCESS_ENTER",
+          "GLOBAL_PROCESS_START_FAST",
+          "GLOBAL_PROCESS_START",
+          "GLOBAL_PROCESS_SET_MOVE",
+          "GLOBAL_PROCESS_STOPPED",
+          "GLOBAL_PROCESS_NPC_IDLE",
+          "GLOBAL_PROCESS_KICK",
+          "GLOBAL_MAP_BASE_SPEED"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Global map walk types",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "GM_WALK_GROUND",
+          "GM_WALK_FLY",
+          "GM_WALK_WATER"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "AngelScript properties",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "AS_ALLOW_UNSAFE_REFERENCES",
+          "AS_OPTIMIZE_BYTECODE",
+          "AS_COPY_SCRIPT_SECTIONS",
+          "AS_MAX_STACK_SIZE",
+          "AS_USE_CHARACTER_LITERALS",
+          "AS_ALLOW_MULTILINE_STRINGS",
+          "AS_ALLOW_IMPLICIT_HANDLE_TYPES",
+          "AS_BUILD_WITHOUT_LINE_CUES",
+          "AS_INIT_GLOBAL_VARS_AFTER_BUILD",
+          "AS_REQUIRE_ENUM_SCOPE",
+          "AS_SCRIPT_SCANNER",
+          "AS_INCLUDE_JIT_INSTRUCTIONS",
+          "AS_STRING_ENCODING",
+          "AS_PROPERTY_ACCESSOR_MODE"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Item data masks",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ITEM_DATA_MASK_CHOSEN",
+          "ITEM_DATA_MASK_CRITTER",
+          "ITEM_DATA_MASK_CRITTER_EXT",
+          "ITEM_DATA_MASK_CONTAINER",
+          "ITEM_DATA_MASK_MAP"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Radio",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "RADIO_DISABLE_SEND",
+          "RADIO_DISABLE_RECV",
+          "RADIO_DISABLE_SHIFT_SEND",
+          "RADIO_DISABLE_SHIFT_RECV",
+          "RADIO_DISABLE_SHIFT_BC_SEND",
+          "RADIO_DISABLE_SHIFT_BC_RECV",
+          "RADIO_DISABLE_SHIFT_CHANNEL",
+          "RADIO_BROADCAST_WORLD",
+          "RADIO_BROADCAST_MAP",
+          "RADIO_BROADCAST_LOCATION",
+          "RADIO_BROADCAST_ZONE",
+          "RADIO_BROADCAST_FORCE_ALL"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Weapon calibers",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CALIBER_NONE",
+          "CALIBER_ROCKET",
+          "CALIBER_FLAMETHROWER_FUEL",
+          "CALIBER_C_ENERGY_CELL",
+          "CALIBER_D_ENERGY_CELL",
+          "CALIBER_223",
+          "CALIBER_5MM",
+          "CALIBER_40",
+          "CALIBER_10MM",
+          "CALIBER_44",
+          "CALIBER_14MM",
+          "CALIBER_12_GAUGE",
+          "CALIBER_9MM",
+          "CALIBER_BB",
+          "CALIBER_45",
+          "CALIBER_2MM",
+          "CALIBER_4_7MM_CASELESS",
+          "CALIBER_HN_NEEDLER",
+          "CALIBER_7_62MM",
+          "CALIBER_700_NITRO_EXPRESS",
+          "CALIBER_SIGNAL_ROCKET"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Geomtry",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "GEOMETRY_FALLOUT",
+          "GEOMETRY_TACTICS",
+          "GEOMETRY_ARCANUM",
+          "GEOMETRY_DIABLO"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Constants collections",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CONSTANTS_PARAM",
+          "CONSTANTS_ITEM",
+          "CONSTANTS_DEFINE",
+          "CONSTANTS_PICTURE",
+          "CONSTANTS_HASH"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Game images",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "IMAGE_RELIEF"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Paths",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "PT_ROOT",
+          "PT_DATA",
+          "PT_ART",
+          "PT_ART_CRITTERS",
+          "PT_ART_INTRFACE",
+          "PT_ART_INVEN",
+          "PT_ART_ITEMS",
+          "PT_ART_MISC",
+          "PT_ART_SCENERY",
+          "PT_ART_SKILLDEX",
+          "PT_ART_SPLASH",
+          "PT_ART_TILES",
+          "PT_ART_WALLS",
+          "PT_TEXTURES",
+          "PT_EFFECTS",
+          "PT_SND_MUSIC",
+          "PT_SND_SFX",
+          "PT_SCRIPTS",
+          "PT_VIDEO",
+          "PT_TEXTS",
+          "PT_SAVE",
+          "PT_FONTS",
+          "PT_CACHE",
+          "PT_SERVER_ROOT",
+          "PT_SERVER_DATA",
+          "PT_SERVER_TEXTS",
+          "PT_SERVER_DIALOGS",
+          "PT_SERVER_MAPS",
+          "PT_SERVER_PRO_ITEMS",
+          "PT_SERVER_PRO_CRITTERS",
+          "PT_SERVER_SCRIPTS",
+          "PT_SERVER_SAVE",
+          "PT_SERVER_CLIENTS",
+          "PT_SERVER_BANS",
+          "PT_MAPPER_ROOT",
+          "PT_MAPPER_DATA"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Internal server commands",
+    "isPure": true,
+    "category": "Server | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "COMMAND_EXIT",
+          "COMMAND_MYINFO",
+          "COMMAND_GAMEINFO",
+          "COMMAND_CRITID",
+          "COMMAND_MOVECRIT",
+          "COMMAND_KILLCRIT",
+          "COMMAND_DISCONCRIT",
+          "COMMAND_TOGLOBAL",
+          "COMMAND_RESPAWN",
+          "COMMAND_PARAM",
+          "COMMAND_GETACCESS",
+          "COMMAND_ADDITEM",
+          "COMMAND_CRASH",
+          "COMMAND_ADDITEM_SELF",
+          "COMMAND_ADDNPC",
+          "COMMAND_ADDLOCATION",
+          "COMMAND_RELOADSCRIPTS",
+          "COMMAND_LOADSCRIPT",
+          "COMMAND_RELOAD_CLIENT_SCRIPTS",
+          "COMMAND_RUNSCRIPT",
+          "COMMAND_RELOADLOCATIONS",
+          "COMMAND_LOADLOCATION",
+          "COMMAND_RELOADMAPS",
+          "COMMAND_LOADMAP",
+          "COMMAND_REGENMAP",
+          "COMMAND_RELOADDIALOGS",
+          "COMMAND_LOADDIALOG",
+          "COMMAND_RELOADTEXTS",
+          "COMMAND_RELOADAI",
+          "COMMAND_CHECKVAR",
+          "COMMAND_SETVAR",
+          "COMMAND_SETTIME",
+          "COMMAND_BAN",
+          "COMMAND_DELETE_ACCOUNT",
+          "COMMAND_CHANGE_PASSWORD",
+          "COMMAND_DROP_UID",
+          "COMMAND_LOG"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  }
+]

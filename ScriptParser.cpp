@@ -110,7 +110,7 @@ void FOnlineScriptParser::ExtractFunctions(const std::string& code)
     std::string cleanCode = RemoveComments(code);
 
     const std::unordered_set<std::string> keywords = {
-    "if", "for", "while", "switch", "catch", "return", "else", "do", "try"
+    "#","#if","if", "for", "while", "switch", "catch", "return", "else", "do", "try"
     };
     // Более гибкая регулярка для сигнатуры:
     std::regex funcRegex(R"(([\w:\<\>\*\&\s]+?)\s+([A-Za-z_]\w*)\s*\(([^)]*)\)\s*(?:const|noexcept|override|final)?\s*\{)",

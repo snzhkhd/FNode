@@ -13,37 +13,53 @@ namespace fs = std::filesystem;
 
 static fs::path FindSavedFileForScriptName(const std::string& scriptName, const std::string& dir = "saves");
 
+
+
 // === вспомогательные мапы для типов ===
 static std::string VarTypeToString(EVarType t) {
     switch (t) {
-    case EVarType::Int: return "int";
-    case EVarType::UInt: return "uint";
-    case EVarType::UInt16: return "uint16";
-    case EVarType::UInt8: return "uint8";
-    case EVarType::Float: return "float";
-    case EVarType::Bool: return "bool";
-    case EVarType::String: return "string";
+    case EVarType::Int: return "Int";
+    case EVarType::UInt: return "Uint";
+    case EVarType::UInt16: return "UInt16";
+    case EVarType::UInt8: return "UInt8";
+    case EVarType::Float: return "Dloat";
+    case EVarType::Bool: return "Bool";
+    case EVarType::String: return "String";
     case EVarType::Critter: return "Critter";
-    case EVarType::CritterCl: return "Critter&";
+    case EVarType::CritterCl: return "CritterCL";
     case EVarType::ProtoItem: return "ProtoItem";
     case EVarType::Item: return "Item";
-    case EVarType::ItemCl: return "Item&";
-    default: return "string";
+    case EVarType::ItemCl: return "ItemCL";
+
+    case EVarType::Enums: return "Enums";
+    case EVarType::GameVar: return "GameVar";
+    case EVarType::Map: return "Map";
+    case EVarType::Defines: return "Defines";
+    case EVarType::Colors: return "Colors";
+    case EVarType::EXEC: return "EXEC";
+    default: return "String";
     }
 }
 static EVarType StringToVarType(const std::string& s) {
-    if (s == "int") return EVarType::Int;
-    if (s == "uint") return EVarType::UInt;
-    if (s == "uint16") return EVarType::UInt16;
-    if (s == "uint8") return EVarType::UInt8;
-    if (s == "float") return EVarType::Float;
-    if (s == "bool") return EVarType::Bool;
-    if (s == "string") return EVarType::String;
+    if (s == "Int") return EVarType::Int;
+    if (s == "UInt") return EVarType::UInt;
+    if (s == "UInt16") return EVarType::UInt16;
+    if (s == "UInt8") return EVarType::UInt8;
+    if (s == "Float") return EVarType::Float;
+    if (s == "Bool") return EVarType::Bool;
+    if (s == "String") return EVarType::String;
     if (s == "Critter") return EVarType::Critter;
-    if (s == "Critter&") return EVarType::CritterCl;
+    if (s == "CritterCl") return EVarType::CritterCl;
     if (s == "ProtoItem") return EVarType::ProtoItem;
     if (s == "Item") return EVarType::Item;
-    if (s == "Item&") return EVarType::ItemCl;
+    if (s == "ItemCl") return EVarType::ItemCl;
+
+    if (s == "Enums") return EVarType::Enums;
+    if (s == "GameVar") return EVarType::GameVar;
+    if (s == "Map") return EVarType::Map;
+    if (s == "Defines") return EVarType::Defines;
+    if (s == "Colors") return EVarType::Colors;
+    if (s == "EXEC") return EVarType::EXEC;
     return EVarType::String;
 }
 
@@ -351,4 +367,83 @@ static fs::path FindSavedFileForScriptName(const std::string& scriptName, const 
         }
     }
     return fs::path();
+}
+
+
+PortTemplate JsonToPortTemplate(const nlohmann::json& pj)
+{
+    std::string name = pj.value("name", "");
+    EVarType type = StringToVarType(pj.value("type", "string"));
+
+    bool isInput = pj.contains("isInput")
+        ? pj.value("isInput", true)
+        : !(name.empty() && type != EVarType::Defines); // логика по умолчанию
+
+    if (pj.contains("enumValues")) {
+        auto enums = pj["enumValues"].get<std::vector<std::string>>();
+        return PortTemplate(name, type, isInput, enums);
+    }
+
+    return PortTemplate(name, type, isInput);
+}
+
+
+std::vector<NodeTemplate> LoadNodeTemplates(const std::string& filename)
+{
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        std::cerr << "Failed to open file: " << filename << "\n";
+        return {};
+    }
+
+    nlohmann::json j;
+    try {
+        file >> j;
+    }
+    catch (const std::exception& e) {
+        std::cerr << "JSON parse error: " << e.what() << "\n";
+        return {};
+    }
+
+    std::vector<NodeTemplate> templates;
+
+    for (auto& nj : j) {
+        NodeTemplate nt;
+        nt.name = nj.value("name", std::string());
+        nt.Category = nj.value("category", std::string());
+        nt.isPure = nj.value("isPure", false);
+        nt.type = nj.value("type", 0);
+        nt.ToolTip = nj.value("toolTip", std::string());
+
+        for (auto& pj : nj.value("ports", nlohmann::json::array())) {
+            nt.ports.push_back(JsonToPortTemplate(pj));
+        }
+
+
+        templates.push_back(nt);
+    }
+
+    return templates;
+}
+
+
+bool LoadAllNodeTemplates(const std::string& folder)
+{
+   // static std::vector<NodeTemplate>& g_NodeTemplates = GetGlobalNodeTemplates(); // если у тебя глобальная
+
+    if (!fs::exists(folder) || !fs::is_directory(folder)) {
+        std::cerr << "Folder does not exist: " << folder << "\n";
+        return false;
+    }
+
+    for (auto& entry : fs::directory_iterator(folder)) {
+        if (entry.is_regular_file() && entry.path().extension() == ".json") {
+            auto templates = LoadNodeTemplates(entry.path().string());
+            g_NodeTemplates.insert(g_NodeTemplates.end(), templates.begin(), templates.end());
+            std::cout << "Loaded " << templates.size() << " templates from " << entry.path() << "\n";
+        }
+    }
+
+    std::cout << "Total node templates loaded: " << g_NodeTemplates.size() << "\n";
+    return true;
 }

@@ -25,6 +25,9 @@ char* CreateIconText(int iconCode, const char* text) {
 int main()
 {
     // Initialization
+    
+    LoadAllNodeTemplates("Resources/Nodes");
+
     //---------------------------------------------------------------------------------------
     if (LoadSettings("config.json"))
     {
@@ -36,6 +39,7 @@ int main()
     InitWindow(WindowSize.x, WindowSize.y, "FNode gui" );
     SetWindowState(FLAG_WINDOW_RESIZABLE);
     SetWindowMinSize(600, 400);
+
 
     // Загружаем содержимое скрипта
     ScanFosScripts(ScriptFolder);
@@ -861,7 +865,7 @@ Vector2 SnapToGrid(Vector2 pos)
     };
 }
 
-void DrawNode(const NodeBase& node)
+void DrawNode( NodeBase& node)
 {
 
     static std::shared_ptr<Font> font;
@@ -939,7 +943,7 @@ void DrawNode(const NodeBase& node)
         }
     }
 
-    for (const auto& port : node.ports) {
+    for (auto& port : node.ports) {
         Vector2 ppos = GetPortScreenPosition(node, port.ID);
         float pinRadius = 5.0f * graphScale;
     //    TraceLog(LOG_INFO, "Node %s port '%s' id=%d type=%d isInput=%d", node.name.c_str(), port.name.c_str(), port.ID, (int)port.type, port.isInput);
@@ -961,18 +965,99 @@ void DrawNode(const NodeBase& node)
                 DrawTextEx(*font, port.name.c_str(), Vector2{ ppos.x - 8 * graphScale - tw, ppos.y - 6 * graphScale }, fontSize, 1, WHITE);
             }
         }
-        else {
-            Color circleCol = ColorForVarType(port.type);//port.isInput ? PURPLE : ColorForVarType(port.type);
-            DrawCircleV(ppos, pinRadius, circleCol);
-            // Рисуем текст: у входа справа, у выхода слева
-            int fontSize = (int)(12 * graphScale);
-            if (port.isInput) {
-                DrawTextEx(*font, port.name.c_str(), Vector2{ ppos.x + 8 * graphScale, ppos.y - 6 * graphScale }, fontSize, 1, WHITE);
-            }
-            else {
-                int tw = MeasureText(port.name.c_str(), fontSize);
+        else 
+        {
+            if (port.type == EVarType::Defines || port.type == EVarType::Enums)
+            {
+                // --- рисуем выпадашку ---
+                int fontSize = (int)(12 * graphScale);
 
-                DrawTextEx(*font, port.name.c_str(), Vector2{ ppos.x - 8 * graphScale - tw, ppos.y - 6 * graphScale }, fontSize, 1, WHITE);
+                // Прямоугольник под меню
+                Rectangle comboRect = { ppos.x + 8 * graphScale,
+                                        ppos.y - 8 * graphScale,
+                                        100 * graphScale,
+                                        18 * graphScale };
+
+                DrawRectangleRounded(comboRect, 0.2f, 4, DARKGRAY);
+                DrawRectangleRoundedLines(comboRect, 0.2f, 4, 2, WHITE);
+
+
+                // Текущее значение (например, node хранит выбранный индекс)
+                int selectedIndex = port.selectedIndex; // надо добавить в SPort / PortInstance
+                std::string selected = (selectedIndex >= 0 && selectedIndex < port.enumValues.size())
+                                       ? port.enumValues[selectedIndex]
+                                       : "<none>";
+
+                int charCount = selected.size();
+                while (charCount > 0 && MeasureTextEx(*font, TextSubtext(selected.c_str(), 0, charCount), fontSize, 1).x > comboRect.width - 8) {
+                    --charCount;
+                }
+
+                std::string displayText = TextSubtext(selected.c_str(), 0, charCount);
+                if (charCount < selected.size() && charCount > 3)
+                    displayText = displayText.substr(0, charCount - 3) + "...";
+                DrawTextEx(*font, displayText.c_str(),
+                           { comboRect.x + 4, comboRect.y + 2 },
+                           fontSize, 1, WHITE);
+
+                // Клик мыши по прямоугольнику
+                Vector2 mouse = GetMousePosition();
+                if (CheckCollisionPointRec(mouse, comboRect) && IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+                {
+                    // Открыть меню — можно хранить глобально id открытого порта
+                    g_OpenCombo.nodeId = node.ID;
+                    g_OpenCombo.portId = port.ID;
+                }
+
+                // Если это меню открыто
+                if (g_OpenCombo.nodeId == node.ID && g_OpenCombo.portId == port.ID)
+                {
+                    Rectangle dropRect = { comboRect.x,
+                                           comboRect.y + comboRect.height,
+                                           comboRect.width,
+                                           (float)port.enumValues.size() * comboRect.height };
+
+                    DrawRectangleRounded(dropRect, 0.2f, 4, DARKGRAY);
+
+                    for (int i = 0; i < port.enumValues.size(); i++)
+                    {
+                        Rectangle itemRect = { dropRect.x,
+                                               dropRect.y + i * comboRect.height,
+                                               comboRect.width,
+                                               comboRect.height };
+
+                        Color bg = CheckCollisionPointRec(mouse, itemRect) ? GRAY : DARKGRAY;
+                        DrawRectangleRec(itemRect, bg);
+                        DrawTextEx(*font, port.enumValues[i].c_str(),
+                                   { itemRect.x + 4, itemRect.y + 2 },
+                                   fontSize, 1, WHITE);
+                        
+                        if (CheckCollisionPointRec(mouse, itemRect) &&
+                            IsMouseButtonPressed(MOUSE_LEFT_BUTTON))
+                        {
+                            port.selectedIndex = i; // сохраняем выбор
+                            g_OpenCombo = {};       // закрываем меню
+                        }
+                    }
+                }
+            }
+            else
+            {
+                // обычный порт
+                Color circleCol = ColorForVarType(port.type);
+                DrawCircleV(ppos, pinRadius, circleCol);
+
+                int fontSize = (int)(12 * graphScale);
+                if (port.isInput) {
+                    DrawTextEx(*font, port.name.c_str(),
+                               { ppos.x + 8 * graphScale, ppos.y - 6 * graphScale },
+                               fontSize, 1, WHITE);
+                } else {
+                    int tw = MeasureText(port.name.c_str(), fontSize);
+                    DrawTextEx(*font, port.name.c_str(),
+                               { ppos.x - 8 * graphScale - tw, ppos.y - 6 * graphScale },
+                               fontSize, 1, WHITE);
+                }
             }
         }
 

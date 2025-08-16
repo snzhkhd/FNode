@@ -30,6 +30,9 @@ struct ContextMenu {
     int fontSize = 12;
 } g_contextMenu;
 
+struct OpenCombo { int nodeId = -1; int portId = -1; } g_OpenCombo;
+
+
 void UpdateContextMenu();
 void DrawContextMenu();
 void AutoArrangeNodes(ScriptFile& scriptFile, float startX, float startY, float xSpacing, float ySpacing);
@@ -68,7 +71,7 @@ void GraphUpdate(Rectangle graphArea);
 void GraphDraw(Rectangle graphArea);
 Vector2 SnapToGrid(Vector2 pos);
 static bool IsExecPort(const SPort& p);
-void DrawNode(const NodeBase& node);
+void DrawNode(NodeBase& node);
 void NodeUpdate(NodeBase& node);
 static float Vector2DistanceSqrLine(const Vector2& p, const Vector2& a, const Vector2& b);
 static bool AreTypesCompatible(EVarType outType, EVarType inType);

@@ -1,0 +1,664 @@
+[
+  {
+    "name": "Messages types in messbox",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "FOMB_GAME",
+          "FOMB_TALK",
+          "FOMB_COMBAT_RESULT",
+          "FOMB_VIEW"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Generic descriptions types",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "DESC_INVENTORY_MAIN",
+          "DESC_INVENTORY_SPECIAL",
+          "DESC_INVENTORY_STATS",
+          "DESC_INVENTORY_RESIST"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Item look types",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ITEM_LOOK_DEFAULT",
+          "ITEM_LOOK_ONLY_NAME",
+          "ITEM_LOOK_MAP",
+          "ITEM_LOOK_BARTER",
+          "ITEM_LOOK_INVENTORY",
+          "ITEM_LOOK_WM_CAR"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Critter look types",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CRITTER_ONLY_NAME",
+          "CRITTER_LOOK_SHORT",
+          "CRITTER_LOOK_FULL"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Standart fonts, loaded automatically",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "FONT_OLD_FO",
+          "FONT_NUM",
+          "FONT_BIG_NUM",
+          "FONT_SAND_NUM",
+          "FONT_SPECIAL",
+          "FONT_FALLOUT",
+          "FONT_THIN",
+          "FONT_FAT",
+          "FONT_BIG",
+          "FONT_COURIER_NEW_SMALL"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Font flags",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "FT_NOBREAK",
+          "FT_NOBREAK_LINE",
+          "FT_CENTERX",
+          "FT_CENTERY",
+          "FT_CENTERXY",
+          "FT_CENTERR",
+          "FT_BOTTOM",
+          "FT_UPPER",
+          "FT_NO_COLORIZE",
+          "FT_ALIGN",
+          "FT_BORDERED",
+          "FT_SKIPLINES",
+          "FT_SKIPLINES_END"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Client screen types",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CLIENT_SCREEN_NONE"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Primary screens, hardcoded",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CLIENT_MAIN_SCREEN_LOGIN",
+          "CLIENT_MAIN_SCREEN_REGISTRATION",
+          "CLIENT_MAIN_SCREEN_OPTIONS",
+          "CLIENT_MAIN_SCREEN_CREDITS",
+          "CLIENT_MAIN_SCREEN_GAME",
+          "CLIENT_MAIN_SCREEN_GLOBAL_MAP",
+          "CLIENT_MAIN_SCREEN_WAIT",
+          "CLIENT_SCREEN_INVENTORY",
+          "CLIENT_SCREEN_PICKUP",
+          "CLIENT_SCREEN_MINIMAP",
+          "CLIENT_SCREEN_CHARACTER",
+          "CLIENT_SCREEN_DIALOG",
+          "CLIENT_SCREEN_BARTER",
+          "CLIENT_SCREEN_PIP_BOY",
+          "CLIENT_SCREEN_FIX_BOY",
+          "CLIENT_SCREEN_MENU",
+          "CLIENT_SCREEN_AIM",
+          "CLIENT_SCREEN_SPLIT",
+          "CLIENT_SCREEN_TIMER",
+          "CLIENT_SCREEN_DIALOGBOX",
+          "CLIENT_SCREEN_ELEVATOR",
+          "CLIENT_SCREEN_SAY",
+          "CLIENT_SCREEN_CHA_NAME",
+          "CLIENT_SCREEN_CHA_AGE",
+          "CLIENT_SCREEN_CHA_SEX",
+          "CLIENT_SCREEN_GM_TOWN",
+          "CLIENT_SCREEN_INPUT_BOX",
+          "CLIENT_SCREEN_SKILLBOX",
+          "CLIENT_SCREEN_USE",
+          "CLIENT_SCREEN_PERK",
+          "CLIENT_SCREEN_TOWN_VIEW",
+          "CLIENT_SCREEN_SAVE_LOAD",
+          "CLIENT_SCREEN_TEST",
+          "CLIENT_SCREEN_RADIO"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Cursors",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CURSOR_DEFAULT",
+          "CURSOR_MOVE",
+          "CURSOR_USE_OBJECT",
+          "CURSOR_USE_WEAPON",
+          "CURSOR_USE_SKILL",
+          "CURSOR_WAIT",
+          "CURSOR_HAND"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Mouse click states",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "MOUSE_CLICK_LEFT",
+          "MOUSE_CLICK_RIGHT",
+          "MOUSE_CLICK_MIDDLE",
+          "MOUSE_CLICK_WHEEL_UP",
+          "MOUSE_CLICK_WHEEL_DOWN",
+          "MOUSE_CLICK_EXT0",
+          "MOUSE_CLICK_EXT1",
+          "MOUSE_CLICK_EXT2",
+          "MOUSE_CLICK_EXT3",
+          "MOUSE_CLICK_EXT4"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Items collections",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ITEMS_INVENTORY",
+          "ITEMS_USE",
+          "ITEMS_BARTER",
+          "ITEMS_BARTER_OFFER",
+          "ITEMS_BARTER_OPPONENT",
+          "ITEMS_BARTER_OPPONENT_OFFER",
+          "ITEMS_PICKUP",
+          "ITEMS_PICKUP_FROM"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Scroll elements",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "SCROLL_MESSBOX",
+          "SCROLL_INVENTORY",
+          "SCROLL_INVENTORY_ITEM_INFO",
+          "SCROLL_PICKUP",
+          "SCROLL_PICKUP_FROM",
+          "SCROLL_USE",
+          "SCROLL_BARTER",
+          "SCROLL_BARTER_OFFER",
+          "SCROLL_BARTER_OPPONENT",
+          "SCROLL_BARTER_OPPONENT_OFFER",
+          "SCROLL_GLOBAL_MAP_CITIES_X",
+          "SCROLL_GLOBAL_MAP_CITIES_Y",
+          "SCROLL_SPLIT_VALUE",
+          "SCROLL_TIMER_VALUE",
+          "SCROLL_PERK",
+          "SCROLL_DIALOG_TEXT",
+          "SCROLL_MAP_ZOOM_VALUE",
+          "SCROLL_CHARACTER_PERKS",
+          "SCROLL_CHARACTER_KARMA",
+          "SCROLL_CHARACTER_KILLS",
+          "SCROLL_PIPBOY_STATUS",
+          "SCROLL_PIPBOY_STATUS_QUESTS",
+          "SCROLL_PIPBOY_STATUS_SCORES",
+          "SCROLL_PIPBOY_AUTOMAPS",
+          "SCROLL_PIPBOY_ARCHIVES",
+          "SCROLL_PIPBOY_ARCHIVES_INFO"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Keyboard key codes",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "DIK_ESCAPE",
+          "DIK_1",
+          "DIK_2",
+          "DIK_3",
+          "DIK_4",
+          "DIK_5",
+          "DIK_6",
+          "DIK_7",
+          "DIK_8",
+          "DIK_9",
+          "DIK_0",
+          "DIK_MINUS",
+          "DIK_EQUALS",
+          "DIK_BACK",
+          "DIK_TAB",
+          "DIK_Q",
+          "DIK_W",
+          "DIK_E",
+          "DIK_R",
+          "DIK_T",
+          "DIK_Y",
+          "DIK_U",
+          "DIK_I",
+          "DIK_O",
+          "DIK_P",
+          "DIK_LBRACKET",
+          "DIK_RBRACKET",
+          "DIK_RETURN",
+          "DIK_LCONTROL",
+          "DIK_A",
+          "DIK_S",
+          "DIK_D",
+          "DIK_F",
+          "DIK_G",
+          "DIK_H",
+          "DIK_J",
+          "DIK_K",
+          "DIK_L",
+          "DIK_SEMICOLON",
+          "DIK_APOSTROPHE",
+          "DIK_GRAVE",
+          "DIK_LSHIFT",
+          "DIK_BACKSLASH",
+          "DIK_Z",
+          "DIK_X",
+          "DIK_C",
+          "DIK_V",
+          "DIK_B",
+          "DIK_N",
+          "DIK_M",
+          "DIK_COMMA",
+          "DIK_PERIOD",
+          "DIK_SLASH",
+          "DIK_RSHIFT",
+          "DIK_MULTIPLY",
+          "DIK_LMENU",
+          "DIK_SPACE",
+          "DIK_CAPITAL",
+          "DIK_F1",
+          "DIK_F2",
+          "DIK_F3",
+          "DIK_F4",
+          "DIK_F5",
+          "DIK_F6",
+          "DIK_F7",
+          "DIK_F8",
+          "DIK_F9",
+          "DIK_F10",
+          "DIK_NUMLOCK",
+          "DIK_SCROLL",
+          "DIK_NUMPAD7",
+          "DIK_NUMPAD8",
+          "DIK_NUMPAD9",
+          "DIK_SUBTRACT",
+          "DIK_NUMPAD4",
+          "DIK_NUMPAD5",
+          "DIK_NUMPAD6",
+          "DIK_ADD",
+          "DIK_NUMPAD1",
+          "DIK_NUMPAD2",
+          "DIK_NUMPAD3",
+          "DIK_NUMPAD0",
+          "DIK_DECIMAL",
+          "DIK_F11",
+          "DIK_F12",
+          "DIK_NUMPADENTER",
+          "DIK_RCONTROL",
+          "DIK_DIVIDE",
+          "DIK_SYSRQ",
+          "DIK_RMENU",
+          "DIK_PAUSE",
+          "DIK_HOME",
+          "DIK_UP",
+          "DIK_PRIOR",
+          "DIK_LEFT",
+          "DIK_RIGHT",
+          "DIK_END",
+          "DIK_DOWN",
+          "DIK_NEXT",
+          "DIK_INSERT",
+          "DIK_DELETE",
+          "DIK_LWIN",
+          "DIK_RWIN",
+          "DIK_CLIPBOARD_PASTE"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Draw primitive types",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "DRAW_PRIMITIVE_POINTLIST",
+          "DRAW_PRIMITIVE_LINELIST",
+          "DRAW_PRIMITIVE_LINESTRIP",
+          "DRAW_PRIMITIVE_TRIANGLELIST",
+          "DRAW_PRIMITIVE_TRIANGLESTRIP",
+          "DRAW_PRIMITIVE_TRIANGLEFAN"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Combat messages",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "HF_KNOCKOUT",
+          "HF_KNOCKDOWN",
+          "HF_CRIPPLED_LEFT_LEG",
+          "HF_CRIPPLED_RIGHT_LEG",
+          "HF_CRIPPLED_LEFT_ARM",
+          "HF_CRIPPLED_RIGHT_ARM",
+          "HF_BLINDED",
+          "HF_DEATH",
+          "HF_ON_FIRE",
+          "HF_BYPASS_ARMOR",
+          "HF_DROPPED_WEAPON",
+          "HF_LOST_NEXT_TURN",
+          "HF_RANDOM",
+          "MF_KNOCKED_DOWN",
+          "MF_ON_FIRE",
+          "MF_WEAPON_EXPLODED",
+          "MF_WEAPON_DESTROYED",
+          "MF_WEAPON_DROPPED",
+          "MF_LOST_NEXT_TURN",
+          "MF_HIT_SELF",
+          "MF_LOST_REST_OF_AMMO",
+          "MF_FIRED_DUD_SHOT",
+          "MF_HURT_SELF",
+          "MF_HIT_RANDOMLY",
+          "MF_CRIPPLED_RANDOM_LIMB",
+          "MF_WAS_KILLED",
+          "CMSG_MISS",
+          "CMSG_CRIT_MISS",
+          "CMSG_CRIT_MISS_DAMAGE",
+          "CMSG_HIT",
+          "CMSG_AIMED_HIT",
+          "CMSG_CRIT_HIT",
+          "CMSG_CRIT_AIMED_HIT",
+          "CMSG_HIT_DEAD",
+          "CMSG_AIMED_HIT_DEAD",
+          "CMSG_CRIT_HIT_DEAD",
+          "CMSG_CRIT_AIMED_HIT_DEAD",
+          "CMSG_OOPS",
+          "CMSG_HIT_RANDOMLY"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Effect types",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "EFFECT_2D_GENERIC",
+          "EFFECT_2D_CRITTER",
+          "EFFECT_2D_TILE",
+          "EFFECT_2D_ROOF",
+          "EFFECT_2D_RAIN",
+          "EFFECT_3D_SIMPLE",
+          "EFFECT_3D_SIMPLE_SHADOW",
+          "EFFECT_3D_SKINNED",
+          "EFFECT_3D_SKINNED_SHADOW",
+          "EFFECT_INTERFACE_BASE",
+          "EFFECT_INTERFACE_CONTOUR",
+          "EFFECT_FONT",
+          "EFFECT_PRIMITIVE_GENERIC",
+          "EFFECT_PRIMITIVE_LIGHT",
+          "EFFECT_FLUSH_RENDER_TARGET",
+          "EFFECT_FLUSH_RENDER_TARGET_MS",
+          "EFFECT_FLUSH_PRIMITIVE",
+          "EFFECT_FLUSH_MAP"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Chosen actions",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "CHOSEN_NONE",
+          "CHOSEN_MOVE",
+          "CHOSEN_MOVE_TO_CRIT",
+          "CHOSEN_DIR",
+          "CHOSEN_SHOW_ITEM",
+          "CHOSEN_HIDE_ITEM",
+          "CHOSEN_USE_ITEM",
+          "CHOSEN_MOVE_ITEM",
+          "CHOSEN_MOVE_ITEM_CONT",
+          "CHOSEN_TAKE_ALL",
+          "CHOSEN_USE_SKL_ON_CRITTER",
+          "CHOSEN_USE_SKL_ON_ITEM",
+          "CHOSEN_USE_SKL_ON_SCEN",
+          "CHOSEN_TALK_NPC",
+          "CHOSEN_PICK_ITEM",
+          "CHOSEN_PICK_CRIT",
+          "CHOSEN_WRITE_HOLO"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Item modes",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "ITEM_MODE_PRIMARY",
+          "ITEM_MODE_SECONDARY",
+          "ITEM_MODE_THIRD",
+          "ITEM_MODE_RELOAD",
+          "ITEM_MODE_USE"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  },
+  {
+    "name": "Target types",
+    "isPure": true,
+    "category": "Client | Define",
+    "ports": [
+      {
+        "name": "Type",
+        "type": "Defines",
+        "isInput": true,
+        "enumValues": [
+          "TARGET_SELF",
+          "TARGET_SELF_ITEM",
+          "TARGET_CRITTER",
+          "TARGET_ITEM",
+          "TARGET_SCENERY"
+        ]
+      },
+      {
+        "name": "",
+        "type": "Int"
+      }
+    ]
+  }
+]

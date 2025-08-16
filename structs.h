@@ -40,12 +40,17 @@ enum class RepType
 };
 
 struct SPort {
+
     std::string name;
     int ID;
     EVarType type; // enum: INT, FLOAT, BOOL, OBJECT, etc.
     bool isArray;
     bool isInput;
     bool isHovered = false;
+    // дл€ enum-портов
+    int selectedIndex = 0;
+    std::vector<std::string> enumValues;
+
 };
 
 
@@ -77,6 +82,7 @@ struct SVariables : public sBase
 
 struct NodeBase : public sBase
 {
+
     std::vector<SPort> ports;
 
     std::vector<SConnection> connections;
@@ -97,7 +103,20 @@ struct Imports : public sBase
     int from; //ID;
 };
 
+struct PortTemplate {
+    std::string name;
+    EVarType type;
+    bool isInput;
 
+    // если это enum Ч список значений
+    std::vector<std::string> enumValues;
+
+    PortTemplate(const std::string& n, EVarType t, bool in)
+        : name(n), type(t), isInput(in) {}
+
+    PortTemplate(const std::string& n, EVarType t, bool in, const std::vector<std::string>& enums)
+        : name(n), type(t), isInput(in), enumValues(enums) {}
+};
 struct NodeTemplate {
     std::string name;
     bool isPure = false; // если true Ч без Exec портов
@@ -105,33 +124,42 @@ struct NodeTemplate {
     std::string Category = "";
     int type = 0;
     // порты задаЄм как (name, type, isInput)
-    std::vector<std::tuple<std::string, EVarType, bool>> ports;
+    std::vector<PortTemplate> ports;
+
     // можно добавить метаданные/иконку/описание при необходимости
     std::string ToolTip = "";
 
-    NodeTemplate(const std::string& n, bool pure,
-        const std::vector<std::tuple<std::string, EVarType, bool>>& p)
+//    std::vector<std::pair<int, std::string>> enumValues;
+
+    NodeTemplate() = default;
+
+    NodeTemplate(const std::string & n, bool pure,
+        const std::vector<PortTemplate>&p)
         : name(n), isPure(pure), ports(p) {}
 
-    NodeTemplate(const std::string& n, bool pure, const std::string& cat, int t,
-        const std::vector<std::tuple<std::string, EVarType, bool>>& p)
+    NodeTemplate(const std::string & n, bool pure, const std::string & cat, int t,
+        const std::vector<PortTemplate>&p)
         : name(n), isPure(pure), Category(cat), type(t), ports(p) {}
 
-    NodeTemplate(const std::string& n, bool pure, const std::vector<std::tuple<std::string, EVarType, bool>>& p, const std::string& tip)
+    NodeTemplate(const std::string & n, bool pure,
+        const std::vector<PortTemplate>&p, const std::string & tip)
         : name(n), isPure(pure), ports(p), ToolTip(tip) {}
 
-    NodeTemplate(const std::string& n, bool pure, const std::string& cat, int t,
-        const std::vector<std::tuple<std::string, EVarType, bool>>& p, const std::string& tip)
+    NodeTemplate(const std::string & n, bool pure, const std::string & cat, int t,
+        const std::vector<PortTemplate>&p, const std::string & tip)
         : name(n), isPure(pure), Category(cat), type(t), ports(p), ToolTip(tip) {}
 
+    NodeTemplate(const std::string & n, bool pure, const std::string & cat, int t,
+        const std::vector<PortTemplate>&p, const std::string & tip,
+        const std::vector<std::pair<int, std::string>>&enums)
+        : name(n), isPure(pure), Category(cat), type(t), ports(p),
+        ToolTip(tip){}
+
     NodeTemplate(const std::string& n, bool pure, const std::string& cat,
-        const std::vector<std::tuple<std::string, EVarType, bool>>& p)
-        : name(n), isPure(pure), Category(cat), ports(p) {}
-    
-    NodeTemplate(const std::string& n, bool pure, const std::string& cat,
-        const std::vector<std::tuple<std::string, EVarType, bool>>& p,
-        const std::string& tip)
-        : name(n), isPure(pure), Category(cat), ports(p), ToolTip(tip) {}
+        const std::vector<PortTemplate>& p)
+        : name(n), isPure(pure), Category(cat), type(0), ports(p) {}
+
+
 
 };
 // Node in category tree
